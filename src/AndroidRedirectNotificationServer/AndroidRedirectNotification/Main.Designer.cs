@@ -30,19 +30,19 @@
         {
             components = new System.ComponentModel.Container();
             recvMsgText = new TextBox();
-            portLabel = new Label();
-            portNum = new NumericUpDown();
-            label1 = new Label();
-            applyBtn = new Button();
             recvMsgMenu = new ContextMenuStrip(components);
             recvMsgMenu_Copy = new ToolStripMenuItem();
             recvMsgMenu_SelectAll = new ToolStripMenuItem();
             recvMsgMenu_ClearAll = new ToolStripMenuItem();
+            portLabel = new Label();
+            portNum = new NumericUpDown();
+            label1 = new Label();
+            applyBtn = new Button();
             tableLayoutPanel = new TableLayoutPanel();
             tableLayoutPanel2 = new TableLayoutPanel();
             tableLayoutPanel1 = new TableLayoutPanel();
-            ((System.ComponentModel.ISupportInitialize)portNum).BeginInit();
             recvMsgMenu.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)portNum).BeginInit();
             tableLayoutPanel.SuspendLayout();
             tableLayoutPanel2.SuspendLayout();
             tableLayoutPanel1.SuspendLayout();
@@ -60,6 +60,33 @@
             recvMsgText.ReadOnly = true;
             recvMsgText.Size = new Size(422, 208);
             recvMsgText.TabIndex = 4;
+            // 
+            // recvMsgMenu
+            // 
+            recvMsgMenu.Items.AddRange(new ToolStripItem[] { recvMsgMenu_Copy, recvMsgMenu_SelectAll, recvMsgMenu_ClearAll });
+            recvMsgMenu.Name = "recvMsgMenu";
+            recvMsgMenu.Size = new Size(123, 70);
+            // 
+            // recvMsgMenu_Copy
+            // 
+            recvMsgMenu_Copy.Name = "recvMsgMenu_Copy";
+            recvMsgMenu_Copy.Size = new Size(122, 22);
+            recvMsgMenu_Copy.Text = "Copy";
+            recvMsgMenu_Copy.Click += recvMsgMenu_Copy_Click;
+            // 
+            // recvMsgMenu_SelectAll
+            // 
+            recvMsgMenu_SelectAll.Name = "recvMsgMenu_SelectAll";
+            recvMsgMenu_SelectAll.Size = new Size(122, 22);
+            recvMsgMenu_SelectAll.Text = "Select All";
+            recvMsgMenu_SelectAll.Click += recvMsgMenu_SelectAll_Click;
+            // 
+            // recvMsgMenu_ClearAll
+            // 
+            recvMsgMenu_ClearAll.Name = "recvMsgMenu_ClearAll";
+            recvMsgMenu_ClearAll.Size = new Size(122, 22);
+            recvMsgMenu_ClearAll.Text = "Clear All";
+            recvMsgMenu_ClearAll.Click += recvMsgMenu_ClearAll_Click;
             // 
             // portLabel
             // 
@@ -98,33 +125,6 @@
             applyBtn.Text = "Apply";
             applyBtn.UseVisualStyleBackColor = true;
             applyBtn.Click += applyBtn_Click;
-            // 
-            // recvMsgMenu
-            // 
-            recvMsgMenu.Items.AddRange(new ToolStripItem[] { recvMsgMenu_Copy, recvMsgMenu_SelectAll, recvMsgMenu_ClearAll });
-            recvMsgMenu.Name = "recvMsgMenu";
-            recvMsgMenu.Size = new Size(123, 70);
-            // 
-            // recvMsgMenu_Copy
-            // 
-            recvMsgMenu_Copy.Name = "recvMsgMenu_Copy";
-            recvMsgMenu_Copy.Size = new Size(122, 22);
-            recvMsgMenu_Copy.Text = "Copy";
-            recvMsgMenu_Copy.Click += recvMsgMenu_Copy_Click;
-            // 
-            // recvMsgMenu_SelectAll
-            // 
-            recvMsgMenu_SelectAll.Name = "recvMsgMenu_SelectAll";
-            recvMsgMenu_SelectAll.Size = new Size(122, 22);
-            recvMsgMenu_SelectAll.Text = "Select All";
-            recvMsgMenu_SelectAll.Click += recvMsgMenu_SelectAll_Click;
-            // 
-            // recvMsgMenu_ClearAll
-            // 
-            recvMsgMenu_ClearAll.Name = "recvMsgMenu_ClearAll";
-            recvMsgMenu_ClearAll.Size = new Size(122, 22);
-            recvMsgMenu_ClearAll.Text = "Clear All";
-            recvMsgMenu_ClearAll.Click += recvMsgMenu_ClearAll_Click;
             // 
             // tableLayoutPanel
             // 
@@ -182,9 +182,9 @@
             Controls.Add(tableLayoutPanel);
             Font = new Font("Segoe UI", 10F);
             Name = "Main";
-            Text = "Android Redirect Notification Sevrer";
-            ((System.ComponentModel.ISupportInitialize)portNum).EndInit();
+            Text = "Android Redirect Notification Server";
             recvMsgMenu.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)portNum).EndInit();
             tableLayoutPanel.ResumeLayout(false);
             tableLayoutPanel2.ResumeLayout(false);
             tableLayoutPanel2.PerformLayout();
