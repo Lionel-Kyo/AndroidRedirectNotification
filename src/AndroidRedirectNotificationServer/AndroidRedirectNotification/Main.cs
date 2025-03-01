@@ -2,7 +2,7 @@ using Microsoft.Toolkit.Uwp.Notifications;
 using System.Diagnostics;
 using Windows.UI.Notifications;
 
-namespace AndroidRedirectNotification_PC
+namespace AndroidRedirectNotification
 {
     public partial class Main : Form
     {

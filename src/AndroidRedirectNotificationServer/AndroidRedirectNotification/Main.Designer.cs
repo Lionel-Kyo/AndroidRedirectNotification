@@ -1,4 +1,4 @@
-﻿namespace AndroidRedirectNotification_PC
+﻿namespace AndroidRedirectNotification
 {
     partial class Main
     {

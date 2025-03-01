@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace AndroidRedirectNotification_PC
+namespace AndroidRedirectNotification
 {
     internal static class Program
     {

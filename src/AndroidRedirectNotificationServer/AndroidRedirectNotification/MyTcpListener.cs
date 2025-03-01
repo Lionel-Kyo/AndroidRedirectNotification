@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Text.Json.Serialization;
 using System.Text.Json;
 
-namespace AndroidRedirectNotification_PC
+namespace AndroidRedirectNotification
 {
     internal class MyTcpListener : IDisposable
     {
