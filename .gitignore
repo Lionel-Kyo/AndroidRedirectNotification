@@ -1,0 +1,8 @@
+src/AndroidRedirectNotificationServer/.vs/*
+src/AndroidRedirectNotificationClient/.vs/*
+src/.vs/*
+
+src/AndroidRedirectNotificationServer/AndroidRedirectNotification/bin/*
+src/AndroidRedirectNotificationServer/AndroidRedirectNotification/obj/*
+src/AndroidRedirectNotificationClient/AndroidRedirectNotification/bin/*
+src/AndroidRedirectNotificationClient/AndroidRedirectNotification/obj/*

@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AndroidRedirectNotification.MainPage">
+
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,0"
+            Spacing="25">
+            
+            <Label
+                Text="Last Received Message:"
+                Style="{StaticResource Headline}"
+                SemanticProperties.HeadingLevel="Level1" />
+
+            <Label
+                x:Name="welcomeLabel"
+                Text="No Message Received"
+                Style="{StaticResource SubHeadline}"
+                SemanticProperties.HeadingLevel="Level2"/>
+
+            <HorizontalStackLayout
+                Padding="0,0"
+                Spacing="15"
+                HorizontalOptions="FillAndExpand">
+                <Label
+                    Text="IP Address:"
+                    SemanticProperties.HeadingLevel="Level5"
+                    VerticalOptions="Center" />
+                <Entry
+                    Keyboard="Url"
+                    x:Name="ipEditEntry"
+                    MaxLength="16384"
+                    Text="192.168.1.1" 
+                    HorizontalOptions="FillAndExpand" />
+            </HorizontalStackLayout>
+
+            <HorizontalStackLayout
+                Padding="0,0"
+                Spacing="15"
+                HorizontalOptions="FillAndExpand">
+                <Label
+                    Text="Port:"
+                    SemanticProperties.HeadingLevel="Level5"
+                    VerticalOptions="Center" />
+                <Entry
+                    Keyboard="Numeric"
+                    x:Name="portEntry"
+                    MaxLength="5"
+                    Text="443" 
+                    HorizontalOptions="FillAndExpand" />
+            </HorizontalStackLayout>
+
+            <Button
+                x:Name="editBtn"
+                Text="Apply" 
+                Clicked="OnEditBtnClicked"
+                HorizontalOptions="Fill" />
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
