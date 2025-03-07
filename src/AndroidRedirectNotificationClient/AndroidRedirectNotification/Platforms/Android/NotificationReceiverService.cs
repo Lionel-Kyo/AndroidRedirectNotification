@@ -1,16 +1,19 @@
 ﻿using Android.App;
 using Android.Content;
+using Android.OS;
 using Android.Service.Notification;
 using Android.Util;
 using AndroidRedirectNotification;
+using AndroidRedirectNotification.Platforms.Android;
 using Java.Security.Interfaces;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using static Microsoft.Maui.ApplicationModel.Platform;
 
 // [Android.Runtime.Register("android/service/notification/NotificationListenerService", DoNotGenerateAcw = true)]
-[Service(Name = "com.kyokyoapp.NotificationReceiverService", Permission = "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE", Label = "Notification Receiver Service", Exported = true)]
+[Service(Name = "com.example.RedirectNotification.NotificationReceiverService", Permission = "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE", Label = "Notification Receiver Service", Exported = true)]
 [IntentFilter(new[] { "android.service.notification.NotificationListenerService" })]
 public class NotificationReceiverService : NotificationListenerService
 {
@@ -24,20 +27,51 @@ public class NotificationReceiverService : NotificationListenerService
     {
         //Log.Info("NotificationService", "Notification received!");
         base.OnNotificationPosted(sbn);
-        string packageName = sbn?.PackageName ?? "";
-        string? title = sbn?.Notification?.Extras?.GetCharSequence("android.title")?.ToString();
-        string? message = sbn?.Notification?.Extras?.GetCharSequence("android.text")?.ToString();
+        if (sbn == null) 
+            return;
 
+        var notification = sbn.Notification;
+        if (notification == null) 
+            return;
+
+        string packageName = sbn.PackageName ?? "";
+        string? title = notification.Extras?.GetCharSequence("android.title")?.ToString();
+        string? message = notification.Extras?.GetCharSequence("android.text")?.ToString();
         if (string.IsNullOrEmpty(title) || string.IsNullOrEmpty(message))
             return;
 
-        string jsonText = JsonSerializer.Serialize(new Dictionary<string, string>()
+        var actionTitles = notification.Actions?.Select(a => a.Title?.ToString() ?? "")?.ToList() ?? new List<string>();
+        // bool isOngoing = notification.Flags.HasFlag(NotificationFlags.OngoingEvent);
+        int notificationImportance = 3; // Default
+        if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
         {
-            { "PackageName", packageName },
-            { "AppName", GetApplicationName(packageName) ?? "" },
-            { "Title", title },
-            { "Message", message },
-        });
+#pragma warning disable CA1416
+            var manager = (NotificationManager?)Android.App.Application.Context.GetSystemService(Context.NotificationService);
+            var channel = manager?.GetNotificationChannel(notification.ChannelId);
+            if (channel != null)
+            {
+                if (channel.Importance != NotificationImportance.Unspecified)
+                    notificationImportance = (int)channel.Importance;
+            }
+#pragma warning restore CA1416
+        }
+
+        var jsonSerializerOptions = new JsonSerializerOptions
+        {
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+        jsonSerializerOptions.Converters.Add(new JsonNumberEnumConverter<NotificationFlags>());
+        string jsonText = JsonSerializer.Serialize(new MyNotificationData()
+        {
+            PackageName = packageName,
+            AppName = GetApplicationName(packageName) ?? "",
+            Title = title,
+            Message = message,
+            Category = notification.Category ?? "",
+            ActionTitles = actionTitles,
+            Importantce = notificationImportance,
+            Flags = notification.Flags
+        }, jsonSerializerOptions);
 
         //Log.Info("NotificationService", $"Notification: {jsonText}");
         this.SendToServer(jsonText);
@@ -50,7 +84,7 @@ public class NotificationReceiverService : NotificationListenerService
         base.OnNotificationRemoved(sbn);
     }
 
-    public string? GetApplicationName(string packageName)
+    private string? GetApplicationName(string packageName)
     {
         if (string.IsNullOrEmpty(packageName))
             return null;

@@ -12,7 +12,7 @@ namespace AndroidRedirectNotification
 {
     internal class MyTcpListener : IDisposable
     {
-        public event Action<string, string, string, string>? OnMessageReceived;
+        public event Action<MyNotificationData>? OnMessageReceived;
         private bool isRun;
         private TcpListener? listener;
         private Thread? listenerThread;
@@ -72,9 +72,9 @@ namespace AndroidRedirectNotification
                         bytesRead = stream.Read(buffer, 0, buffer.Length);
                         byte[] utf8Message = AES.MessageByteCryption.Decrypt(buffer.Take(bytesRead).ToArray(), aesKey);
                         string message = Encoding.UTF8.GetString(utf8Message);
-                        var json = JsonSerializer.Deserialize<Dictionary<string, string>>(message);
-                        if (json != null && OnMessageReceived != null)
-                            OnMessageReceived(json["PackageName"], json["AppName"], json["Title"], json["Message"]);
+                        var data = JsonSerializer.Deserialize<MyNotificationData>(message);
+                        if (data != null && OnMessageReceived != null)
+                            OnMessageReceived(data);
                     }
                 }
                 catch { }

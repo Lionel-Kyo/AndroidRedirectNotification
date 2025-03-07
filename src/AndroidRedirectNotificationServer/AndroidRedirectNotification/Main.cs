@@ -1,39 +1,90 @@
 using Microsoft.Toolkit.Uwp.Notifications;
 using System.Diagnostics;
+using System.Text.Json;
 using Windows.UI.Notifications;
 
 namespace AndroidRedirectNotification
 {
-    public partial class Main : Form
+    internal partial class Main : Form
     {
+        private static readonly NotificationFlags[] NotificationFlagsValues = Enum.GetValues(typeof(NotificationFlags)).Cast<NotificationFlags>().ToArray();
+        private Settings settings;
         private MyTcpListener myTcpListener;
         private long lastRecvTime;
         public Main()
         {
             InitializeComponent();
-            this.recvMsgText.Text = "";
-            this.myTcpListener = new MyTcpListener((ushort)this.portNum.Value);
+            try
+            {
+                this.settings = Settings.ReadSettings()!;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Read Settings Failed.\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                this.Close();
+                return;
+            }
+            finally
+            {
+                // For disabling constructor null members
+                if (this.settings == null)
+                    this.settings = new Settings();
+                this.myTcpListener = null!;
+            }
+            this.RestartTcpListener();
+        }
+
+        private bool RestartTcpListener()
+        {
+            if (this.myTcpListener != null)
+                this.myTcpListener.Dispose();
+
+            ushort port = this.settings.Port;
+            this.myTcpListener = new MyTcpListener(port);
             try
             {
                 this.myTcpListener.Start();
                 this.myTcpListener.OnMessageReceived += MyTcpListener_OnMessageReceived;
             }
-            catch 
+            catch
             {
-                MessageBox.Show($"Cannot start server with port: {(ushort)this.portNum.Value}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Cannot start server with port: {port}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
+            return true;
         }
 
-        private void MyTcpListener_OnMessageReceived(string packetName, string appName, string title, string message)
+        private void MyTcpListener_OnMessageReceived(MyNotificationData data)
         {
+            string appName = data.AppName;
             if (string.IsNullOrEmpty(appName))
-                appName = packetName;
+                appName = data.PackageName;
 
             long recvTime = Program.ApplicationTime.ElapsedMilliseconds;
-            this.Invoke(() => this.recvMsgText.AppendText($"({appName}) {title}: {message}{Environment.NewLine}"));
-            if (this.lastRecvTime <= 0 || (recvTime - this.lastRecvTime > 1500))
+
+            var jsonSerializerOptions = new JsonSerializerOptions
             {
-                ShowWindowsNotification($"({appName}) {title}", message);
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            };
+
+            this.Invoke(() =>
+            {
+                int i = this.dgv.Rows.Add();
+                DataGridViewRow row = this.dgv.Rows[i];
+                row.Cells["dgvPackageName"].Value = data.PackageName;
+                row.Cells["dgvAppName"].Value = data.AppName;
+                row.Cells["dgvTitle"].Value = data.Title;
+                row.Cells["dgvMessage"].Value = data.Message;
+                row.Cells["dgvCategory"].Value = data.Category;
+                row.Cells["dgvActionTitles"].Value = string.Join(", ", data.ActionTitles);
+                row.Cells["dgvImportantce"].Value = data.Importantce;
+                row.Cells["dgvFlags"].Value = string.Join(", ", NotificationFlagsValues.Where(f => data.Flags.HasFlag(f)).Select(f => f.ToString()));
+            });
+            if (data.Category != NotificationCategory.CategoryTransport && !data.Flags.HasFlag(NotificationFlags.OngoingEvent))
+            {
+                //if (this.lastRecvTime <= 0 || (recvTime - this.lastRecvTime > 1500))
+                ShowWindowsNotification($"({appName}) {data.Title}", data.Message);
+
             }
             this.lastRecvTime = recvTime;
         }
@@ -44,53 +95,33 @@ namespace AndroidRedirectNotification
                 .AddText(title)
                 .AddText(message)
                 .Show();
-
-            //string toastXml = $@"
-            //<toast>
-            //    <visual>
-            //        <binding template='ToastGeneric'>
-            //            <text>{title}</text>
-            //            <text>{message}</text>
-            //        </binding>
-            //    </visual>
-            //</toast>";
-            //Windows.Data.Xml.Dom.XmlDocument xmlDoc = new Windows.Data.Xml.Dom.XmlDocument();
-            //xmlDoc.LoadXml(toastXml);
-
-            //ToastNotification toast = new ToastNotification(xmlDoc);
-            //ToastNotificationManager.CreateToastNotifier().Show(toast);
-        }
-
-        private void applyBtn_Click(object sender, EventArgs e)
-        {
-            this.myTcpListener?.Stop();
-            this.myTcpListener = new MyTcpListener((ushort)this.portNum.Value);
-            try
-            {
-                this.myTcpListener.Start();
-                this.myTcpListener.OnMessageReceived += MyTcpListener_OnMessageReceived;
-            }
-            catch
-            {
-                MessageBox.Show($"Cannot start server with port: {(ushort)this.portNum.Value}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void recvMsgMenu_Copy_Click(object sender, EventArgs e)
-        {
-            string? selectedText = this.recvMsgText.Text;
-            if (!string.IsNullOrEmpty(selectedText)) 
-                Clipboard.SetText(selectedText);
         }
 
         private void recvMsgMenu_SelectAll_Click(object sender, EventArgs e)
         {
-            this.recvMsgText.SelectAll();
+            this.dgv.SelectAll();
         }
 
         private void recvMsgMenu_ClearAll_Click(object sender, EventArgs e)
         {
-            this.recvMsgText.Clear();
+            this.dgv.Rows.Clear();
+        }
+
+        private void menu_Settings_General_Click(object sender, EventArgs e)
+        {
+            SettingsForm settingsForm = new SettingsForm(this.settings);
+            settingsForm.StartPosition = FormStartPosition.CenterParent;
+            settingsForm.ShowDialog();
+            Settings oldSettings = this.settings;
+            Settings? newSettings = settingsForm.Value;
+            if (newSettings == null)
+                return;
+            this.settings = newSettings;
+
+            if (oldSettings.Port != newSettings.Port)
+            {
+                this.RestartTcpListener();
+            }
         }
     }
 }

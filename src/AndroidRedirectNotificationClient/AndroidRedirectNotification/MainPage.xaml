@@ -7,17 +7,11 @@
         <VerticalStackLayout
             Padding="30,0"
             Spacing="25">
-            
-            <Label
-                Text="Last Received Message:"
-                Style="{StaticResource Headline}"
-                SemanticProperties.HeadingLevel="Level1" />
 
             <Label
-                x:Name="welcomeLabel"
-                Text="No Message Received"
-                Style="{StaticResource SubHeadline}"
-                SemanticProperties.HeadingLevel="Level2"/>
+                Text="Server Settings:"
+                Style="{StaticResource Headline}"
+                SemanticProperties.HeadingLevel="Level1" />
 
             <HorizontalStackLayout
                 Padding="0,0"
@@ -56,6 +50,17 @@
                 Text="Apply" 
                 Clicked="OnEditBtnClicked"
                 HorizontalOptions="Fill" />
+
+            <Label
+                Text="Last Received Message:"
+                Style="{StaticResource Headline}"
+                SemanticProperties.HeadingLevel="Level1" />
+
+            <Label
+                x:Name="welcomeLabel"
+                Text="No Message Received"
+                Style="{StaticResource SubHeadline}"
+                SemanticProperties.HeadingLevel="Level2"/>
         </VerticalStackLayout>
     </ScrollView>
 
