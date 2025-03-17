@@ -7,7 +7,6 @@ namespace AndroidRedirectNotification
 {
     internal partial class Main : Form
     {
-        private static readonly NotificationFlags[] NotificationFlagsValues = Enum.GetValues(typeof(NotificationFlags)).Cast<NotificationFlags>().ToArray();
         private Settings settings;
         private MyTcpListener myTcpListener;
         private long lastRecvTime;
@@ -66,21 +65,22 @@ namespace AndroidRedirectNotification
             {
                 Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             };
-
             this.Invoke(() =>
             {
                 int i = this.dgv.Rows.Add();
                 DataGridViewRow row = this.dgv.Rows[i];
+                row.Cells["dgvId"].Value = data.Id;
+                row.Cells["dgvTag"].Value = data.Tag;
                 row.Cells["dgvPackageName"].Value = data.PackageName;
                 row.Cells["dgvAppName"].Value = data.AppName;
                 row.Cells["dgvTitle"].Value = data.Title;
                 row.Cells["dgvMessage"].Value = data.Message;
                 row.Cells["dgvCategory"].Value = data.Category;
-                row.Cells["dgvActionTitles"].Value = string.Join(", ", data.ActionTitles);
                 row.Cells["dgvImportantce"].Value = data.Importantce;
-                row.Cells["dgvFlags"].Value = string.Join(", ", NotificationFlagsValues.Where(f => data.Flags.HasFlag(f)).Select(f => f.ToString()));
+                row.Cells["dgvActionTitles"].Value = string.Join(", ", data.ActionTitles);
+                row.Cells["dgvFlags"].Value = string.Join(", ", data.Flags);
             });
-            if (data.Category != NotificationCategory.CategoryTransport && !data.Flags.HasFlag(NotificationFlags.OngoingEvent))
+            if (data.Category != NotificationCategory.CategoryTransport && !data.Flags.Contains("OngoingEvent"))
             {
                 //if (this.lastRecvTime <= 0 || (recvTime - this.lastRecvTime > 1500))
                 ShowWindowsNotification($"({appName}) {data.Title}", data.Message);

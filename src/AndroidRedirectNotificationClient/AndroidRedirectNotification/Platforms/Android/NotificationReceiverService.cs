@@ -1,5 +1,6 @@
 ﻿using Android.App;
 using Android.Content;
+using Android.Nfc;
 using Android.OS;
 using Android.Service.Notification;
 using Android.Util;
@@ -34,6 +35,8 @@ public class NotificationReceiverService : NotificationListenerService
         if (notification == null) 
             return;
 
+        int id = sbn.Id;
+        string tag = sbn.Tag ?? "";
         string packageName = sbn.PackageName ?? "";
         string? title = notification.Extras?.GetCharSequence("android.title")?.ToString();
         string? message = notification.Extras?.GetCharSequence("android.text")?.ToString();
@@ -63,14 +66,16 @@ public class NotificationReceiverService : NotificationListenerService
         jsonSerializerOptions.Converters.Add(new JsonNumberEnumConverter<NotificationFlags>());
         string jsonText = JsonSerializer.Serialize(new MyNotificationData()
         {
+            Id = id,
+            Tag = tag,
             PackageName = packageName,
             AppName = GetApplicationName(packageName) ?? "",
             Title = title,
             Message = message,
             Category = notification.Category ?? "",
-            ActionTitles = actionTitles,
             Importantce = notificationImportance,
-            Flags = notification.Flags
+            ActionTitles = actionTitles,
+            Flags = Enum.GetValues(typeof(NotificationFlags)).Cast<NotificationFlags>().Where(f => notification.Flags.HasFlag(f)).Select(f => f.ToString()).ToList()
         }, jsonSerializerOptions);
 
         //Log.Info("NotificationService", $"Notification: {jsonText}");
@@ -113,20 +118,18 @@ public class NotificationReceiverService : NotificationListenerService
                     var connectionTask = client.ConnectAsync(MainPage.ServerIp, MainPage.ServerPort);
                     if (connectionTask.Wait(TimeSpan.FromMilliseconds(500))) 
                     {
-                        using (NetworkStream stream = client.GetStream())
+                        using (NetworkStream networkStream = client.GetStream())
                         {
-                            byte[] buffer = new byte[65536];
-                            int bytesRead;
-                            bytesRead = stream.Read(buffer, 0, buffer.Length);
-                            byte[] rsaPublicKey = buffer.Take(bytesRead).ToArray();
+                            MyNetworkStream stream = new MyNetworkStream(networkStream);
+                            byte[] buffer;
+                            buffer = stream.Read();
+                            byte[] rsaPublicKey = buffer;
                             byte[] aesKey = AES.MessageByteCryption.GenerateKey();
                             stream.Write(RSA.MessageByteCryption.EncryptRsa(aesKey, rsaPublicKey));
-                            bytesRead = stream.Read(buffer, 0, buffer.Length);
+                            buffer = stream.Read();
                             var status = JsonSerializer.Deserialize<Dictionary<string, int>>(
                                 Encoding.UTF8.GetString(
-                                    AES.MessageByteCryption.Decrypt(
-                                        buffer.Take(bytesRead).ToArray(), aesKey
-                                    )
+                                    AES.MessageByteCryption.Decrypt(buffer, aesKey)
                                 )
                             );
                             if (status != null && (status.TryGetValue("Status", out int i32Status) && i32Status != 0))
@@ -157,7 +160,6 @@ public class NotificationReceiverService : NotificationListenerService
 
         Log.Error("NotificationService", "Failed to send notification after multiple attempts.");
     }
-
 
     private void UpdateUILabel(string message)
     {

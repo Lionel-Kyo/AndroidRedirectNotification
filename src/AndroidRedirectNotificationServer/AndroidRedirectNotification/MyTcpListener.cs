@@ -51,14 +51,14 @@ namespace AndroidRedirectNotification
                 try
                 {
                     using (TcpClient client = this.listener.AcceptTcpClient())
-                    using (NetworkStream stream = client.GetStream())
+                    using (NetworkStream networkStream = client.GetStream())
                     {
-                        byte[] buffer = new byte[65536];
+                        MyNetworkStream stream = new MyNetworkStream(networkStream);
+                        byte[] buffer;
                         var rsaKeys = RSA.MessageByteCryption.GenerateRsaKeys();
                         stream.Write(rsaKeys.PublicKey);
-                        int bytesRead;
-                        bytesRead = stream.Read(buffer, 0, buffer.Length);
-                        byte[] aesKey = RSA.MessageByteCryption.DecryptRsa(buffer.Take(bytesRead).ToArray(), rsaKeys.PrivateKey);
+                        buffer = stream.Read();
+                        byte[] aesKey = RSA.MessageByteCryption.DecryptRsa(buffer, rsaKeys.PrivateKey);
                         stream.Write(AES.MessageByteCryption.Encrypt(
                             Encoding.UTF8.GetBytes(
                                 JsonSerializer.Serialize(
@@ -69,8 +69,8 @@ namespace AndroidRedirectNotification
                                 )
                             ), aesKey)
                         );
-                        bytesRead = stream.Read(buffer, 0, buffer.Length);
-                        byte[] utf8Message = AES.MessageByteCryption.Decrypt(buffer.Take(bytesRead).ToArray(), aesKey);
+                        buffer = stream.Read();
+                        byte[] utf8Message = AES.MessageByteCryption.Decrypt(buffer, aesKey);
                         string message = Encoding.UTF8.GetString(utf8Message);
                         var data = JsonSerializer.Deserialize<MyNotificationData>(message);
                         if (data != null && OnMessageReceived != null)
