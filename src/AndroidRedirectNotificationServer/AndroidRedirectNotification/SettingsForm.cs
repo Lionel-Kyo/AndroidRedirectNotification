@@ -20,12 +20,16 @@ namespace AndroidRedirectNotification
             InitializeComponent();
             this.KeyPreview = true;
             this.portNum.Value = settings.Port;
+            this.skipDuplicateMsgCheck.Checked = settings.SkipDuplicateMsg;
+            this.skipDuplicateMsgNum.Value = settings.SkipDuplicateMsgMs;
         }
 
         private void applyBtn_Click(object sender, EventArgs e)
         {
             Settings settings = new Settings();
             settings.Port = (ushort)portNum.Value;
+            settings.SkipDuplicateMsg = skipDuplicateMsgCheck.Checked;
+            settings.SkipDuplicateMsgMs = (int)skipDuplicateMsgNum.Value;
             try
             {
                 Settings.SaveSettings(settings);

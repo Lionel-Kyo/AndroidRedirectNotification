@@ -32,13 +32,20 @@
             applyBtn = new Button();
             portNum = new NumericUpDown();
             portLabel = new Label();
+            skipDuplicateMsgCheck = new CheckBox();
+            skipDuplicateMsgNum = new NumericUpDown();
+            skipDuplicateMsgLabel = new Label();
             settingsPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)portNum).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)skipDuplicateMsgNum).BeginInit();
             SuspendLayout();
             // 
             // settingsPanel
             // 
             settingsPanel.AutoScroll = true;
+            settingsPanel.Controls.Add(skipDuplicateMsgLabel);
+            settingsPanel.Controls.Add(skipDuplicateMsgNum);
+            settingsPanel.Controls.Add(skipDuplicateMsgCheck);
             settingsPanel.Controls.Add(applyBtn);
             settingsPanel.Controls.Add(portNum);
             settingsPanel.Controls.Add(portLabel);
@@ -78,6 +85,36 @@
             portLabel.TabIndex = 0;
             portLabel.Text = "Server Port:";
             // 
+            // skipDuplicateMsgCheck
+            // 
+            skipDuplicateMsgCheck.AutoSize = true;
+            skipDuplicateMsgCheck.Location = new Point(12, 54);
+            skipDuplicateMsgCheck.Name = "skipDuplicateMsgCheck";
+            skipDuplicateMsgCheck.Size = new Size(193, 25);
+            skipDuplicateMsgCheck.TabIndex = 4;
+            skipDuplicateMsgCheck.Text = "Skip Duplicate Message";
+            skipDuplicateMsgCheck.UseVisualStyleBackColor = true;
+            // 
+            // skipDuplicateMsgNum
+            // 
+            skipDuplicateMsgNum.Location = new Point(208, 53);
+            skipDuplicateMsgNum.Maximum = new decimal(new int[] { 99999, 0, 0, 0 });
+            skipDuplicateMsgNum.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
+            skipDuplicateMsgNum.Name = "skipDuplicateMsgNum";
+            skipDuplicateMsgNum.Size = new Size(70, 29);
+            skipDuplicateMsgNum.TabIndex = 5;
+            skipDuplicateMsgNum.TextAlign = HorizontalAlignment.Center;
+            skipDuplicateMsgNum.Value = new decimal(new int[] { 1000, 0, 0, 0 });
+            // 
+            // skipDuplicateMsgLabel
+            // 
+            skipDuplicateMsgLabel.AutoSize = true;
+            skipDuplicateMsgLabel.Location = new Point(284, 57);
+            skipDuplicateMsgLabel.Name = "skipDuplicateMsgLabel";
+            skipDuplicateMsgLabel.Size = new Size(31, 21);
+            skipDuplicateMsgLabel.TabIndex = 6;
+            skipDuplicateMsgLabel.Text = "ms";
+            // 
             // SettingsForm
             // 
             AutoScaleDimensions = new SizeF(9F, 21F);
@@ -95,6 +132,7 @@
             settingsPanel.ResumeLayout(false);
             settingsPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)portNum).EndInit();
+            ((System.ComponentModel.ISupportInitialize)skipDuplicateMsgNum).EndInit();
             ResumeLayout(false);
         }
 
@@ -104,5 +142,8 @@
         private NumericUpDown portNum;
         private Label portLabel;
         private Button applyBtn;
+        private CheckBox skipDuplicateMsgCheck;
+        private NumericUpDown skipDuplicateMsgNum;
+        private Label skipDuplicateMsgLabel;
     }
 }

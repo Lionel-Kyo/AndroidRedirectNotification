@@ -35,5 +35,44 @@ namespace AndroidRedirectNotification
             Flags = new List<string>();
             Importantce = 0;
         }
+
+        public bool Equals(MyNotificationData? obj)
+        {
+            if (obj == null) 
+                return false;
+
+            return this.Id == obj.Id && this.Tag == obj.Tag &&
+                this.PackageName == obj.PackageName && this.AppName == obj.AppName &&
+                this.Title == obj.Title && this.Message == obj.Message &&
+                this.Category == obj.Category && this.Importantce == obj.Importantce &&
+                this.ActionTitles.SequenceEqual(obj.ActionTitles) && this.Flags.SequenceEqual(obj.Flags);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj == null) 
+                return false; 
+
+            if (obj is MyNotificationData)
+                return Equals((MyNotificationData)obj);
+
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            HashCode hash = new HashCode();
+            hash.Add(Id);
+            hash.Add(Tag);
+            hash.Add(PackageName);
+            hash.Add(AppName);
+            hash.Add(Title);
+            hash.Add(Message);
+            hash.Add(Category);
+            hash.Add(Importantce);
+            hash.Add(ActionTitles);
+            hash.Add(Flags);
+            return hash.ToHashCode();
+        }
     }
 }

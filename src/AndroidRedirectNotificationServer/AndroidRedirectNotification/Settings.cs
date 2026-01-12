@@ -11,10 +11,14 @@ namespace AndroidRedirectNotification
     {
         public static readonly string SettingsPath = "./Settings/Settings.json";
         public ushort Port { get; set; }
+        public bool SkipDuplicateMsg { get; set; }
+        public int SkipDuplicateMsgMs { get; set; }
 
         public Settings()
         {
             this.Port = 443;
+            this.SkipDuplicateMsg = true;
+            this.SkipDuplicateMsgMs = 1000;
         }
 
         public static Settings? ReadSettings()
