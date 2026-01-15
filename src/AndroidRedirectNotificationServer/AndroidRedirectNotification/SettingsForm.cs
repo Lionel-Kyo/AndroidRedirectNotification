@@ -22,6 +22,7 @@ namespace AndroidRedirectNotification
             this.portNum.Value = settings.Port;
             this.skipDuplicateMsgCheck.Checked = settings.SkipDuplicateMsg;
             this.skipDuplicateMsgNum.Value = settings.SkipDuplicateMsgMs;
+            this.showWindowsNotificationCheck.Checked = settings.ShowWindowsNotification;
         }
 
         private void applyBtn_Click(object sender, EventArgs e)
@@ -30,6 +31,7 @@ namespace AndroidRedirectNotification
             settings.Port = (ushort)portNum.Value;
             settings.SkipDuplicateMsg = skipDuplicateMsgCheck.Checked;
             settings.SkipDuplicateMsgMs = (int)skipDuplicateMsgNum.Value;
+            settings.ShowWindowsNotification = showWindowsNotificationCheck.Checked;
             try
             {
                 Settings.SaveSettings(settings);

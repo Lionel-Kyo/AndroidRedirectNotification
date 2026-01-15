@@ -13,12 +13,14 @@ namespace AndroidRedirectNotification
         public ushort Port { get; set; }
         public bool SkipDuplicateMsg { get; set; }
         public int SkipDuplicateMsgMs { get; set; }
+        public bool ShowWindowsNotification { get; set; }
 
         public Settings()
         {
             this.Port = 443;
             this.SkipDuplicateMsg = true;
             this.SkipDuplicateMsgMs = 1000;
+            this.ShowWindowsNotification = true;
         }
 
         public static Settings? ReadSettings()

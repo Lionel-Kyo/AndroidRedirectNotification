@@ -94,11 +94,11 @@ namespace AndroidRedirectNotification
                     row.Cells["dgvActionTitles"].Value = string.Join(", ", data.ActionTitles);
                     row.Cells["dgvFlags"].Value = string.Join(", ", data.Flags);
                 });
-                if (data.Category != NotificationCategory.CategoryTransport && !data.Flags.Contains("OngoingEvent"))
+                if (settings.ShowWindowsNotification &&
+                    data.Category != NotificationCategory.CategoryTransport && !data.Flags.Contains("OngoingEvent"))
                 {
                     //if (this.lastRecvTime <= 0 || (recvTime - this.lastRecvTime > 1500))
                     ShowWindowsNotification($"({appName}) {data.Title}", data.Message);
-
                 }
             }
         }

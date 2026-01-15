@@ -29,20 +29,22 @@
         private void InitializeComponent()
         {
             settingsPanel = new Panel();
+            skipDuplicateMsgLabel = new Label();
+            skipDuplicateMsgNum = new NumericUpDown();
+            skipDuplicateMsgCheck = new CheckBox();
             applyBtn = new Button();
             portNum = new NumericUpDown();
             portLabel = new Label();
-            skipDuplicateMsgCheck = new CheckBox();
-            skipDuplicateMsgNum = new NumericUpDown();
-            skipDuplicateMsgLabel = new Label();
+            showWindowsNotificationCheck = new CheckBox();
             settingsPanel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)portNum).BeginInit();
             ((System.ComponentModel.ISupportInitialize)skipDuplicateMsgNum).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)portNum).BeginInit();
             SuspendLayout();
             // 
             // settingsPanel
             // 
             settingsPanel.AutoScroll = true;
+            settingsPanel.Controls.Add(showWindowsNotificationCheck);
             settingsPanel.Controls.Add(skipDuplicateMsgLabel);
             settingsPanel.Controls.Add(skipDuplicateMsgNum);
             settingsPanel.Controls.Add(skipDuplicateMsgCheck);
@@ -54,6 +56,36 @@
             settingsPanel.Name = "settingsPanel";
             settingsPanel.Size = new Size(484, 361);
             settingsPanel.TabIndex = 0;
+            // 
+            // skipDuplicateMsgLabel
+            // 
+            skipDuplicateMsgLabel.AutoSize = true;
+            skipDuplicateMsgLabel.Location = new Point(284, 57);
+            skipDuplicateMsgLabel.Name = "skipDuplicateMsgLabel";
+            skipDuplicateMsgLabel.Size = new Size(31, 21);
+            skipDuplicateMsgLabel.TabIndex = 6;
+            skipDuplicateMsgLabel.Text = "ms";
+            // 
+            // skipDuplicateMsgNum
+            // 
+            skipDuplicateMsgNum.Location = new Point(208, 53);
+            skipDuplicateMsgNum.Maximum = new decimal(new int[] { 99999, 0, 0, 0 });
+            skipDuplicateMsgNum.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
+            skipDuplicateMsgNum.Name = "skipDuplicateMsgNum";
+            skipDuplicateMsgNum.Size = new Size(70, 29);
+            skipDuplicateMsgNum.TabIndex = 5;
+            skipDuplicateMsgNum.TextAlign = HorizontalAlignment.Center;
+            skipDuplicateMsgNum.Value = new decimal(new int[] { 1000, 0, 0, 0 });
+            // 
+            // skipDuplicateMsgCheck
+            // 
+            skipDuplicateMsgCheck.AutoSize = true;
+            skipDuplicateMsgCheck.Location = new Point(12, 54);
+            skipDuplicateMsgCheck.Name = "skipDuplicateMsgCheck";
+            skipDuplicateMsgCheck.Size = new Size(193, 25);
+            skipDuplicateMsgCheck.TabIndex = 4;
+            skipDuplicateMsgCheck.Text = "Skip Duplicate Message";
+            skipDuplicateMsgCheck.UseVisualStyleBackColor = true;
             // 
             // applyBtn
             // 
@@ -85,35 +117,15 @@
             portLabel.TabIndex = 0;
             portLabel.Text = "Server Port:";
             // 
-            // skipDuplicateMsgCheck
+            // showWindowsNotificationCheck
             // 
-            skipDuplicateMsgCheck.AutoSize = true;
-            skipDuplicateMsgCheck.Location = new Point(12, 54);
-            skipDuplicateMsgCheck.Name = "skipDuplicateMsgCheck";
-            skipDuplicateMsgCheck.Size = new Size(193, 25);
-            skipDuplicateMsgCheck.TabIndex = 4;
-            skipDuplicateMsgCheck.Text = "Skip Duplicate Message";
-            skipDuplicateMsgCheck.UseVisualStyleBackColor = true;
-            // 
-            // skipDuplicateMsgNum
-            // 
-            skipDuplicateMsgNum.Location = new Point(208, 53);
-            skipDuplicateMsgNum.Maximum = new decimal(new int[] { 99999, 0, 0, 0 });
-            skipDuplicateMsgNum.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
-            skipDuplicateMsgNum.Name = "skipDuplicateMsgNum";
-            skipDuplicateMsgNum.Size = new Size(70, 29);
-            skipDuplicateMsgNum.TabIndex = 5;
-            skipDuplicateMsgNum.TextAlign = HorizontalAlignment.Center;
-            skipDuplicateMsgNum.Value = new decimal(new int[] { 1000, 0, 0, 0 });
-            // 
-            // skipDuplicateMsgLabel
-            // 
-            skipDuplicateMsgLabel.AutoSize = true;
-            skipDuplicateMsgLabel.Location = new Point(284, 57);
-            skipDuplicateMsgLabel.Name = "skipDuplicateMsgLabel";
-            skipDuplicateMsgLabel.Size = new Size(31, 21);
-            skipDuplicateMsgLabel.TabIndex = 6;
-            skipDuplicateMsgLabel.Text = "ms";
+            showWindowsNotificationCheck.AutoSize = true;
+            showWindowsNotificationCheck.Location = new Point(12, 101);
+            showWindowsNotificationCheck.Name = "showWindowsNotificationCheck";
+            showWindowsNotificationCheck.Size = new Size(222, 25);
+            showWindowsNotificationCheck.TabIndex = 7;
+            showWindowsNotificationCheck.Text = "Show Windows Notification";
+            showWindowsNotificationCheck.UseVisualStyleBackColor = true;
             // 
             // SettingsForm
             // 
@@ -131,8 +143,8 @@
             KeyDown += SettingsForm_KeyDown;
             settingsPanel.ResumeLayout(false);
             settingsPanel.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)portNum).EndInit();
             ((System.ComponentModel.ISupportInitialize)skipDuplicateMsgNum).EndInit();
+            ((System.ComponentModel.ISupportInitialize)portNum).EndInit();
             ResumeLayout(false);
         }
 
@@ -145,5 +157,6 @@
         private CheckBox skipDuplicateMsgCheck;
         private NumericUpDown skipDuplicateMsgNum;
         private Label skipDuplicateMsgLabel;
+        private CheckBox showWindowsNotificationCheck;
     }
 }
