@@ -37,8 +37,7 @@
             label1 = new Label();
             tableLayoutPanel1 = new TableLayoutPanel();
             dgv = new DataGridView();
-            menu = new MenuStrip();
-            dgvId = new DataGridViewTextBoxColumn();
+            dgvDateTimeId = new DataGridViewTextBoxColumn();
             dgvTag = new DataGridViewTextBoxColumn();
             dgvPackageName = new DataGridViewTextBoxColumn();
             dgvAppName = new DataGridViewTextBoxColumn();
@@ -48,6 +47,7 @@
             dgvActionTitles = new DataGridViewTextBoxColumn();
             dgvFlags = new DataGridViewTextBoxColumn();
             dgvMessage = new DataGridViewTextBoxColumn();
+            menu = new MenuStrip();
             menu_Settings = new ToolStripMenuItem();
             dgvMenu.SuspendLayout();
             tableLayoutPanel1.SuspendLayout();
@@ -122,8 +122,7 @@
             dgv.AllowUserToDeleteRows = false;
             dgv.BackgroundColor = Color.White;
             dgv.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgv.Columns.AddRange(new DataGridViewColumn[] { dgvId, dgvTag, dgvPackageName, dgvAppName, dgvTitle, dgvCategory, dgvImportantce, dgvActionTitles, dgvFlags, dgvMessage });
-            dgv.ContextMenuStrip = dgvMenu;
+            dgv.Columns.AddRange(new DataGridViewColumn[] { dgvDateTimeId, dgvTag, dgvPackageName, dgvAppName, dgvTitle, dgvCategory, dgvImportantce, dgvActionTitles, dgvFlags, dgvMessage });
             dgv.Dock = DockStyle.Fill;
             dgv.Location = new Point(3, 25);
             dgv.Name = "dgv";
@@ -132,23 +131,12 @@
             dgv.Size = new Size(978, 249);
             dgv.TabIndex = 0;
             // 
-            // menu
+            // dgvDateTimeId
             // 
-            menu.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            menu.Items.AddRange(new ToolStripItem[] { menu_Settings });
-            menu.Location = new Point(0, 0);
-            menu.Name = "menu";
-            menu.Padding = new Padding(8, 2, 0, 2);
-            menu.Size = new Size(984, 29);
-            menu.TabIndex = 1;
-            menu.Text = "menuStrip1";
-            // 
-            // dgvId
-            // 
-            dgvId.HeaderText = "Id";
-            dgvId.Name = "dgvId";
-            dgvId.ReadOnly = true;
-            dgvId.Width = 80;
+            dgvDateTimeId.HeaderText = "DateTime (Id)";
+            dgvDateTimeId.Name = "dgvDateTimeId";
+            dgvDateTimeId.ReadOnly = true;
+            dgvDateTimeId.Width = 80;
             // 
             // dgvTag
             // 
@@ -207,6 +195,17 @@
             dgvMessage.Name = "dgvMessage";
             dgvMessage.ReadOnly = true;
             // 
+            // menu
+            // 
+            menu.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            menu.Items.AddRange(new ToolStripItem[] { menu_Settings });
+            menu.Location = new Point(0, 0);
+            menu.Name = "menu";
+            menu.Padding = new Padding(8, 2, 0, 2);
+            menu.Size = new Size(984, 29);
+            menu.TabIndex = 1;
+            menu.Text = "menuStrip1";
+            // 
             // Main
             // 
             AutoScaleDimensions = new SizeF(9F, 21F);
@@ -239,7 +238,7 @@
         private ToolStripMenuItem menu_Settings;
         private ToolStripMenuItem menu_Settings_General;
         private DataGridView dgv;
-        private DataGridViewTextBoxColumn dgvId;
+        private DataGridViewTextBoxColumn dgvDateTimeId;
         private DataGridViewTextBoxColumn dgvTag;
         private DataGridViewTextBoxColumn dgvPackageName;
         private DataGridViewTextBoxColumn dgvAppName;

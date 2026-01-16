@@ -19,7 +19,7 @@ namespace AndroidRedirectNotification
         {
             this.Port = 443;
             this.SkipDuplicateMsg = true;
-            this.SkipDuplicateMsgMs = 1000;
+            this.SkipDuplicateMsgMs = 2000;
             this.ShowWindowsNotification = true;
         }
 

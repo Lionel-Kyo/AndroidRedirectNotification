@@ -1,5 +1,7 @@
 ﻿using Android.App;
 using Android.Content;
+using Android.Graphics;
+using Android.Graphics.Drawables;
 using Android.Nfc;
 using Android.OS;
 using Android.Service.Notification;
@@ -11,6 +13,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using static Android.Graphics.Bitmap;
 using static Microsoft.Maui.ApplicationModel.Platform;
 
 // [Android.Runtime.Register("android/service/notification/NotificationListenerService", DoNotGenerateAcw = true)]
@@ -20,7 +23,7 @@ public class NotificationReceiverService : NotificationListenerService
 {
     public override void OnListenerConnected()
     {
-        //Log.Info("NotificationService", "Listener Connected!");
+        //Log.Info("NotificationReceiverService", "Listener Connected!");
         base.OnListenerConnected();
     }
 
@@ -35,13 +38,35 @@ public class NotificationReceiverService : NotificationListenerService
         if (notification == null) 
             return;
 
+        long timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         int id = sbn.Id;
         string tag = sbn.Tag ?? "";
         string packageName = sbn.PackageName ?? "";
-        string? title = notification.Extras?.GetCharSequence("android.title")?.ToString();
-        string? message = notification.Extras?.GetCharSequence("android.text")?.ToString();
+        string? title = notification.Extras?.GetCharSequence(Notification.ExtraTitle);
+        string? message = notification.Extras?.GetCharSequence(Notification.ExtraText);
         if (string.IsNullOrEmpty(title) || string.IsNullOrEmpty(message))
             return;
+
+        string pictureBase64 = "";
+        string pictureIconBase64 = "";
+#pragma warning disable CA1416
+        if (Build.VERSION.SdkInt >= BuildVersionCodes.Tiramisu)
+        {
+            var picture = notification.Extras?.GetParcelable(Notification.ExtraPicture, Java.Lang.Class.FromType(typeof(Bitmap))) as Bitmap;
+            if (picture != null)
+                pictureBase64 = BitmapToBase64(picture, CompressFormat.Jpeg!, 80);
+
+            var pictureIcon = notification.Extras?.GetParcelable(Notification.ExtraPictureIcon, Java.Lang.Class.FromType(typeof(Icon))) as Icon;
+            if (pictureIcon != null)
+            {
+                var drawable = pictureIcon.LoadDrawable(this);
+                if (drawable != null && drawable is BitmapDrawable bd && bd.Bitmap != null)
+                {
+                    pictureIconBase64 = BitmapToBase64(bd.Bitmap, CompressFormat.Jpeg!, 80);
+                }
+            }
+        }
+#pragma warning restore CA1416
 
         var actionTitles = notification.Actions?.Select(a => a.Title?.ToString() ?? "")?.ToList() ?? new List<string>();
         // bool isOngoing = notification.Flags.HasFlag(NotificationFlags.OngoingEvent);
@@ -66,12 +91,15 @@ public class NotificationReceiverService : NotificationListenerService
         jsonSerializerOptions.Converters.Add(new JsonNumberEnumConverter<NotificationFlags>());
         string jsonText = JsonSerializer.Serialize(new MyNotificationData()
         {
+            TimeStamp = timestamp,
             Id = id,
             Tag = tag,
             PackageName = packageName,
             AppName = GetApplicationName(packageName) ?? "",
             Title = title,
             Message = message,
+            Picture = pictureBase64,
+            PictureIcon = pictureIconBase64,
             Category = notification.Category ?? "",
             Importantce = notificationImportance,
             ActionTitles = actionTitles,
@@ -142,23 +170,23 @@ public class NotificationReceiverService : NotificationListenerService
                     }
                     else
                     {
-                        Log.Error("NotificationService", $"Connection timed out (Attempt {attempt}/{maxRetries})");
+                        Log.Error("NotificationReceiverService", $"Connection timed out (Attempt {attempt}/{maxRetries})");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Log.Error("NotificationService", $"Error sending notification (Attempt {attempt}/{maxRetries}): " + ex.Message);
+                Log.Error("NotificationReceiverService", $"Error sending notification (Attempt {attempt}/{maxRetries}): " + ex.Message);
             }
 
             if (attempt < maxRetries)
             {
-                Log.Info("NotificationService", $"Retrying in {retryDelayMs / 1000d} seconds...");
+                Log.Info("NotificationReceiverService", $"Retrying in {retryDelayMs / 1000d} seconds...");
                 Thread.Sleep(retryDelayMs);
             }
         }
 
-        Log.Error("NotificationService", "Failed to send notification after multiple attempts.");
+        Log.Error("NotificationReceiverService", "Failed to send notification after multiple attempts.");
     }
 
     private void UpdateUILabel(string message)
@@ -178,5 +206,17 @@ public class NotificationReceiverService : NotificationListenerService
             });
         }
         catch { }
+    }
+
+    public static string BitmapToBase64(Bitmap bitmap, CompressFormat compressFormat, int quality)
+    {
+        using (var stream = new MemoryStream())
+        {
+
+            bitmap.Compress(compressFormat, 100, stream);
+
+            byte[] bytes = stream.ToArray();
+            return Convert.ToBase64String(bytes);
+        }
     }
 }

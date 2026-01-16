@@ -1,6 +1,7 @@
 using Microsoft.Toolkit.Uwp.Notifications;
 using System.Diagnostics;
 using System.Text.Json;
+using System.Windows.Forms;
 using Windows.UI.Notifications;
 
 namespace AndroidRedirectNotification
@@ -15,6 +16,8 @@ namespace AndroidRedirectNotification
         public Main()
         {
             InitializeComponent();
+            this.dgv.CellMouseDown += dgv_CellMouseDown;
+            this.dgv.CellMouseDown += dgv_CellMouseDown2;
             try
             {
                 this.settings = Settings.ReadSettings()!;
@@ -83,7 +86,7 @@ namespace AndroidRedirectNotification
                 {
                     int i = this.dgv.Rows.Add();
                     DataGridViewRow row = this.dgv.Rows[i];
-                    row.Cells["dgvId"].Value = data.Id;
+                    row.Cells["dgvDateTimeId"].Value = $"{data.GetDateTime(): yyyy-MM-dd HH:mm:ss} ({data.Id})";
                     row.Cells["dgvTag"].Value = data.Tag;
                     row.Cells["dgvPackageName"].Value = data.PackageName;
                     row.Cells["dgvAppName"].Value = data.AppName;
@@ -111,17 +114,17 @@ namespace AndroidRedirectNotification
                 .Show();
         }
 
-        private void recvMsgMenu_SelectAll_Click(object sender, EventArgs e)
+        private void recvMsgMenu_SelectAll_Click(object? sender, EventArgs e)
         {
             this.dgv.SelectAll();
         }
 
-        private void recvMsgMenu_ClearAll_Click(object sender, EventArgs e)
+        private void recvMsgMenu_ClearAll_Click(object? sender, EventArgs e)
         {
             this.dgv.Rows.Clear();
         }
 
-        private void menu_Settings_General_Click(object sender, EventArgs e)
+        private void menu_Settings_General_Click(object? sender, EventArgs e)
         {
             SettingsForm settingsForm = new SettingsForm(this.settings);
             settingsForm.StartPosition = FormStartPosition.CenterParent;
@@ -135,6 +138,43 @@ namespace AndroidRedirectNotification
             if (oldSettings.Port != newSettings.Port)
             {
                 this.RestartTcpListener();
+            }
+        }
+
+        private void dgv_CellMouseDown(object? sender, DataGridViewCellMouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right && e.RowIndex >= 0)
+            {
+                this.dgv.ClearSelection();
+                this.dgv.Rows[e.RowIndex].Cells[e.ColumnIndex].Selected = true;
+                this.dgv.CurrentCell = dgv.Rows[e.RowIndex].Cells[e.ColumnIndex];
+            }
+        }
+
+        private void dgv_CellMouseDown2(object? sender, DataGridViewCellMouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Right || e.RowIndex < 0)
+                return;
+
+            ContextMenuStrip menu = new ContextMenuStrip();
+            {
+                var row = dgv.Rows[e.RowIndex];
+
+                if (e.ColumnIndex == 9)
+                {
+                    menu.Items.Add("Show Message", null, (_s, _e) =>
+                    {
+                        ViewMsgForm viewTextForm = new ViewMsgForm((string)dgv.Rows[e.RowIndex].Cells[e.ColumnIndex].Value);
+                        viewTextForm.StartPosition = FormStartPosition.CenterParent;
+                        viewTextForm.ShowDialog();
+                    });
+                    menu.Items.Add(new ToolStripSeparator());
+                }
+
+                menu.Items.Add("Select All", null, recvMsgMenu_SelectAll_Click);
+                menu.Items.Add("Clear All", null, recvMsgMenu_ClearAll_Click);
+
+                menu.Show(Cursor.Position);
             }
         }
     }
