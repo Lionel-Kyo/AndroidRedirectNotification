@@ -35,20 +35,20 @@ namespace AndroidRedirectNotification
                     this.settings = new Settings();
                 this.myTcpListener = null!;
             }
-            this.RestartTcpListener();
+            _ = this.RestartTcpListenerAsync();
         }
 
-        private bool RestartTcpListener()
+        private async Task<bool> RestartTcpListenerAsync()
         {
             if (this.myTcpListener != null)
-                this.myTcpListener.Dispose();
+                await this.myTcpListener.StopAsync();
 
             ushort port = this.settings.Port;
-            this.myTcpListener = new MyTcpListener(port);
             try
             {
-                this.myTcpListener.Start();
+                this.myTcpListener = new MyTcpListener(port);
                 this.myTcpListener.OnMessageReceived += MyTcpListener_OnMessageReceived;
+                this.myTcpListener.Start();
             }
             catch
             {
@@ -60,50 +60,59 @@ namespace AndroidRedirectNotification
 
         private void MyTcpListener_OnMessageReceived(MyNotificationData data)
         {
-            string appName = data.AppName;
-            if (string.IsNullOrEmpty(appName))
-                appName = data.PackageName;
-
-            long recvTime = Program.ApplicationTime.ElapsedMilliseconds;
-            bool sameAsLastData = data.Equals(this.lastNotificationData);
-            bool addNewMessage = !this.settings.SkipDuplicateMsg ||
-                (this.settings.SkipDuplicateMsg && !sameAsLastData ||
-                (this.settings.SkipDuplicateMsg && sameAsLastData && (recvTime - this.lastRecvTime >= settings.SkipDuplicateMsgMs)));
-
-            this.lastNotificationData = data;
-            this.lastRecvTime = recvTime;
-
-            if (addNewMessage)
+            try
             {
-                lastNotificationData = data;
+                string appName = data.AppName;
+                if (string.IsNullOrEmpty(appName))
+                    appName = data.PackageName;
 
-                var jsonSerializerOptions = new JsonSerializerOptions
-                {
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                };
+                long recvTime = Program.ApplicationTime.ElapsedMilliseconds;
+                bool sameAsLastData = data.Equals(this.lastNotificationData);
+                bool addNewMessage = !this.settings.SkipDuplicateMsg ||
+                    (this.settings.SkipDuplicateMsg && !sameAsLastData ||
+                    (this.settings.SkipDuplicateMsg && sameAsLastData && (recvTime - this.lastRecvTime >= settings.SkipDuplicateMsgMs)));
 
-                this.Invoke(() =>
+                this.lastNotificationData = data;
+                this.lastRecvTime = recvTime;
+
+                if (addNewMessage)
                 {
-                    int i = this.dgv.Rows.Add();
-                    DataGridViewRow row = this.dgv.Rows[i];
-                    row.Cells["dgvDateTimeId"].Value = $"{data.GetDateTime(): yyyy-MM-dd HH:mm:ss} ({data.Id})";
-                    row.Cells["dgvTag"].Value = data.Tag;
-                    row.Cells["dgvPackageName"].Value = data.PackageName;
-                    row.Cells["dgvAppName"].Value = data.AppName;
-                    row.Cells["dgvTitle"].Value = data.Title;
-                    row.Cells["dgvMessage"].Value = data.Message;
-                    row.Cells["dgvCategory"].Value = data.Category;
-                    row.Cells["dgvImportantce"].Value = data.Importantce;
-                    row.Cells["dgvActionTitles"].Value = string.Join(", ", data.ActionTitles);
-                    row.Cells["dgvFlags"].Value = string.Join(", ", data.Flags);
-                });
-                if (settings.ShowWindowsNotification &&
-                    data.Category != NotificationCategory.CategoryTransport && !data.Flags.Contains("OngoingEvent"))
-                {
-                    //if (this.lastRecvTime <= 0 || (recvTime - this.lastRecvTime > 1500))
-                    ShowWindowsNotification($"({appName}) {data.Title}", data.Message);
+                    lastNotificationData = data;
+
+                    var jsonSerializerOptions = new JsonSerializerOptions
+                    {
+                        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                    };
+
+                    this.Invoke(() =>
+                    {
+                        try
+                        {
+                            int i = this.dgv.Rows.Add();
+                            DataGridViewRow row = this.dgv.Rows[i];
+                            row.Cells["dgvDateTimeId"].Value = $"{data.GetDateTime(): yyyy-MM-dd HH:mm:ss} ({data.Id})";
+                            row.Cells["dgvTag"].Value = data.Tag;
+                            row.Cells["dgvPackageName"].Value = data.PackageName;
+                            row.Cells["dgvAppName"].Value = data.AppName;
+                            row.Cells["dgvTitle"].Value = data.Title;
+                            row.Cells["dgvMessage"].Value = data.Message;
+                            row.Cells["dgvCategory"].Value = data.Category;
+                            row.Cells["dgvImportantce"].Value = data.Importantce;
+                            row.Cells["dgvActionTitles"].Value = string.Join(", ", data.ActionTitles);
+                            row.Cells["dgvFlags"].Value = string.Join(", ", data.Flags);
+                            row.Cells["dgvData"].Value = data;
+                        }
+                        catch { }
+                    });
+                    if (settings.ShowWindowsNotification &&
+                        data.Category != NotificationCategory.CategoryTransport && !data.Flags.Contains("OngoingEvent"))
+                    {
+                        //if (this.lastRecvTime <= 0 || (recvTime - this.lastRecvTime > 1500))
+                        ShowWindowsNotification($"({appName}) {data.Title}", data.Message);
+                    }
                 }
             }
+            catch { }
         }
 
         public void ShowWindowsNotification(string title, string message)
@@ -137,7 +146,7 @@ namespace AndroidRedirectNotification
 
             if (oldSettings.Port != newSettings.Port)
             {
-                this.RestartTcpListener();
+                _ = this.RestartTcpListenerAsync();
             }
         }
 
@@ -164,7 +173,8 @@ namespace AndroidRedirectNotification
                 {
                     menu.Items.Add("Show Message", null, (_s, _e) =>
                     {
-                        ViewMsgForm viewTextForm = new ViewMsgForm((string)dgv.Rows[e.RowIndex].Cells[e.ColumnIndex].Value);
+                        var data = (MyNotificationData)dgv.Rows[e.RowIndex].Cells["dgvData"].Value;
+                        ViewMsgForm viewTextForm = new ViewMsgForm(data.Message, new List<string> { data.PictureIcon, data.Picture });
                         viewTextForm.StartPosition = FormStartPosition.CenterParent;
                         viewTextForm.ShowDialog();
                     });

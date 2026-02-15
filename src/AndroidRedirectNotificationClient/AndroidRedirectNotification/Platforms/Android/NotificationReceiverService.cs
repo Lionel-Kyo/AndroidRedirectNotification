@@ -2,6 +2,7 @@
 using Android.Content;
 using Android.Graphics;
 using Android.Graphics.Drawables;
+using Android.Icu.Text;
 using Android.Nfc;
 using Android.OS;
 using Android.Service.Notification;
@@ -89,7 +90,8 @@ public class NotificationReceiverService : NotificationListenerService
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
         };
         jsonSerializerOptions.Converters.Add(new JsonNumberEnumConverter<NotificationFlags>());
-        string jsonText = JsonSerializer.Serialize(new MyNotificationData()
+
+        var myData = new MyNotificationData()
         {
             TimeStamp = timestamp,
             Id = id,
@@ -104,11 +106,15 @@ public class NotificationReceiverService : NotificationListenerService
             Importantce = notificationImportance,
             ActionTitles = actionTitles,
             Flags = Enum.GetValues(typeof(NotificationFlags)).Cast<NotificationFlags>().Where(f => notification.Flags.HasFlag(f)).Select(f => f.ToString()).ToList()
-        }, jsonSerializerOptions);
+        };
+
+        string jsonText = JsonSerializer.Serialize(myData, jsonSerializerOptions);
 
         //Log.Info("NotificationService", $"Notification: {jsonText}");
-        this.SendToServer(jsonText);
-        this.UpdateUILabel(jsonText);
+        _ = this.SendToServerAync(jsonText);
+        this.UpdateUILabel($"{myData.GetDateTime()}\n{myData.PackageName}\n{myData.AppName}\n{myData.Title}\n{myData.Message}" +
+            $"\n{(string.IsNullOrWhiteSpace(myData.Picture) ? "Picture Not Exists" : "Picture Exists")}" +
+            $"\n{(string.IsNullOrWhiteSpace(myData.PictureIcon) ? "PictureIcon Not Exists" : "PictureIcon Exists")}");
     }
 
     public override void OnNotificationRemoved(StatusBarNotification? sbn)
@@ -132,7 +138,8 @@ public class NotificationReceiverService : NotificationListenerService
         }
         catch { return null; }
     }
-    private void SendToServer(string message)
+
+    private async Task SendToServerAync(string message)
     {
         const int maxRetries = 1;
         const int retryDelayMs = 100;
@@ -143,35 +150,36 @@ public class NotificationReceiverService : NotificationListenerService
             {
                 using (TcpClient client = new TcpClient())
                 {
-                    var connectionTask = client.ConnectAsync(MainPage.ServerIp, MainPage.ServerPort);
-                    if (connectionTask.Wait(TimeSpan.FromMilliseconds(500))) 
+                    try
                     {
-                        using (NetworkStream networkStream = client.GetStream())
-                        {
-                            MyNetworkStream stream = new MyNetworkStream(networkStream);
-                            byte[] buffer;
-                            buffer = stream.Read();
-                            byte[] rsaPublicKey = buffer;
-                            byte[] aesKey = AES.MessageByteCryption.GenerateKey();
-                            stream.Write(RSA.MessageByteCryption.EncryptRsa(aesKey, rsaPublicKey));
-                            buffer = stream.Read();
-                            var status = JsonSerializer.Deserialize<Dictionary<string, int>>(
-                                Encoding.UTF8.GetString(
-                                    AES.MessageByteCryption.Decrypt(buffer, aesKey)
-                                )
-                            );
-                            if (status != null && (status.TryGetValue("Status", out int i32Status) && i32Status != 0))
-                            {
-                                byte[] encryptedMessage = AES.MessageByteCryption.Encrypt(Encoding.UTF8.GetBytes(message), aesKey);
-                                stream.Write(encryptedMessage);
-                            }
-                        }
-                        return; 
+                        await client.ConnectAsync(MainPage.ServerIp, MainPage.ServerPort).WaitAsync(TimeSpan.FromMilliseconds(1000));
                     }
-                    else
+                    catch (TimeoutException)
                     {
                         Log.Error("NotificationReceiverService", $"Connection timed out (Attempt {attempt}/{maxRetries})");
                     }
+
+                    using (NetworkStream networkStream = client.GetStream())
+                    {
+                        MyNetworkStream stream = new MyNetworkStream(networkStream);
+                        byte[] buffer;
+                        buffer = await stream.ReadAsync();
+                        byte[] rsaPublicKey = buffer;
+                        byte[] aesKey = AES.MessageByteCryption.GenerateKey();
+                        await stream.WriteAsync(RSA.MessageByteCryption.EncryptRsa(aesKey, rsaPublicKey));
+                        buffer = await stream.ReadAsync();
+                        var status = JsonSerializer.Deserialize<Dictionary<string, int>>(
+                            Encoding.UTF8.GetString(
+                                AES.MessageByteCryption.Decrypt(buffer, aesKey)
+                            )
+                        );
+                        if (status != null && (status.TryGetValue("Status", out int i32Status) && i32Status != 0))
+                        {
+                            byte[] encryptedMessage = AES.MessageByteCryption.Encrypt(Encoding.UTF8.GetBytes(message), aesKey);
+                            await stream.WriteAsync(encryptedMessage);
+                        }
+                    }
+                    return; 
                 }
             }
             catch (Exception ex)
@@ -182,7 +190,7 @@ public class NotificationReceiverService : NotificationListenerService
             if (attempt < maxRetries)
             {
                 Log.Info("NotificationReceiverService", $"Retrying in {retryDelayMs / 1000d} seconds...");
-                Thread.Sleep(retryDelayMs);
+                await Task.Delay(retryDelayMs);
             }
         }
 

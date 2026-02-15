@@ -37,6 +37,7 @@
             label1 = new Label();
             tableLayoutPanel1 = new TableLayoutPanel();
             dgv = new DataGridView();
+            menu = new MenuStrip();
             dgvDateTimeId = new DataGridViewTextBoxColumn();
             dgvTag = new DataGridViewTextBoxColumn();
             dgvPackageName = new DataGridViewTextBoxColumn();
@@ -47,7 +48,7 @@
             dgvActionTitles = new DataGridViewTextBoxColumn();
             dgvFlags = new DataGridViewTextBoxColumn();
             dgvMessage = new DataGridViewTextBoxColumn();
-            menu = new MenuStrip();
+            dgvData = new DataGridViewTextBoxColumn();
             menu_Settings = new ToolStripMenuItem();
             dgvMenu.SuspendLayout();
             tableLayoutPanel1.SuspendLayout();
@@ -122,7 +123,7 @@
             dgv.AllowUserToDeleteRows = false;
             dgv.BackgroundColor = Color.White;
             dgv.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgv.Columns.AddRange(new DataGridViewColumn[] { dgvDateTimeId, dgvTag, dgvPackageName, dgvAppName, dgvTitle, dgvCategory, dgvImportantce, dgvActionTitles, dgvFlags, dgvMessage });
+            dgv.Columns.AddRange(new DataGridViewColumn[] { dgvDateTimeId, dgvTag, dgvPackageName, dgvAppName, dgvTitle, dgvCategory, dgvImportantce, dgvActionTitles, dgvFlags, dgvMessage, dgvData });
             dgv.Dock = DockStyle.Fill;
             dgv.Location = new Point(3, 25);
             dgv.Name = "dgv";
@@ -130,6 +131,17 @@
             dgv.RowHeadersVisible = false;
             dgv.Size = new Size(978, 249);
             dgv.TabIndex = 0;
+            // 
+            // menu
+            // 
+            menu.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            menu.Items.AddRange(new ToolStripItem[] { menu_Settings });
+            menu.Location = new Point(0, 0);
+            menu.Name = "menu";
+            menu.Padding = new Padding(8, 2, 0, 2);
+            menu.Size = new Size(984, 29);
+            menu.TabIndex = 1;
+            menu.Text = "menuStrip1";
             // 
             // dgvDateTimeId
             // 
@@ -195,16 +207,12 @@
             dgvMessage.Name = "dgvMessage";
             dgvMessage.ReadOnly = true;
             // 
-            // menu
+            // dgvData
             // 
-            menu.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            menu.Items.AddRange(new ToolStripItem[] { menu_Settings });
-            menu.Location = new Point(0, 0);
-            menu.Name = "menu";
-            menu.Padding = new Padding(8, 2, 0, 2);
-            menu.Size = new Size(984, 29);
-            menu.TabIndex = 1;
-            menu.Text = "menuStrip1";
+            dgvData.HeaderText = "Data";
+            dgvData.Name = "dgvData";
+            dgvData.ReadOnly = true;
+            dgvData.Visible = false;
             // 
             // Main
             // 
@@ -248,5 +256,6 @@
         private DataGridViewTextBoxColumn dgvActionTitles;
         private DataGridViewTextBoxColumn dgvFlags;
         private DataGridViewTextBoxColumn dgvMessage;
+        private DataGridViewTextBoxColumn dgvData;
     }
 }

@@ -7,59 +7,84 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json.Serialization;
 using System.Text.Json;
+using Windows.Storage.Streams;
 
 namespace AndroidRedirectNotification
 {
     internal class MyTcpListener : IDisposable
     {
         public event Action<MyNotificationData>? OnMessageReceived;
-        private bool isRun;
+        private Task? listeningTask;
         private TcpListener? listener;
-        private Thread? listenerThread;
+        private CancellationTokenSource? cancelToken;
+        private RSA.CryptionKeys rsaKeys;
         public ushort Port { get; private set; }
         public MyTcpListener(ushort port) 
         {
             this.Port = port;
+            this.rsaKeys = RSA.MessageByteCryption.GenerateRsaKeys();
         }
 
         public void Start()
         {
             this.listener = new TcpListener(IPAddress.Any, this.Port);
             this.listener.Start();
-            this.isRun = true;
-            this.listenerThread = new Thread(this.Listening);
-            this.listenerThread.IsBackground = true;
-            this.listenerThread.Start();
+            this.cancelToken = new CancellationTokenSource();
+            this.listeningTask = StartListeningAsync(this.cancelToken.Token);
         }
 
-        public void Stop()
+        public async Task StopAsync()
         {
-            this.isRun = false;
-            this.listener?.Dispose();
-            this.listenerThread?.Join();
+            if (this.cancelToken == null)
+                return;
+
+            this.cancelToken.Cancel();
+            this.listener?.Stop();
+
+            if (this.listeningTask != null)
+                await this.listeningTask;
+
+            this.cancelToken = null;
+            this.listener = null;
+            this.listeningTask = null;
         }
 
-        public void Dispose() => this.Stop();
+        public void Dispose()
+        {
+            _ = StopAsync();
+        }
 
-        public void Listening()
+        private async Task StartListeningAsync(CancellationToken token)
         {
             if (this.listener == null)
                 return;
 
-            while (this.isRun)
+            while (!token.IsCancellationRequested)
             {
                 try
                 {
-                    using (TcpClient client = this.listener.AcceptTcpClient())
+                    TcpClient client = await listener.AcceptTcpClientAsync(token);
+
+                    _ = Task.Run(() => HandleClientAsync(client), token);
+                }
+                catch { }
+            }
+        }
+
+        private async Task HandleClientAsync(TcpClient client)
+        {
+            try
+            {
+                byte[] buffer;
+                using (client)
+                {
                     using (NetworkStream networkStream = client.GetStream())
                     {
                         MyNetworkStream stream = new MyNetworkStream(networkStream);
-                        byte[] buffer;
-                        var rsaKeys = RSA.MessageByteCryption.GenerateRsaKeys();
-                        stream.Write(rsaKeys.PublicKey);
-                        buffer = stream.Read();
-                        byte[] aesKey = RSA.MessageByteCryption.DecryptRsa(buffer, rsaKeys.PrivateKey);
-                        stream.Write(AES.MessageByteCryption.Encrypt(
+                        await stream.WriteAsync(this.rsaKeys.PublicKey);
+                        buffer = await stream.ReadAsync();
+                        byte[] aesKey = RSA.MessageByteCryption.DecryptRsa(buffer, this.rsaKeys.PrivateKey);
+                        await stream.WriteAsync(AES.MessageByteCryption.Encrypt(
                             Encoding.UTF8.GetBytes(
                                 JsonSerializer.Serialize(
                                     new Dictionary<string, int>()
@@ -69,7 +94,7 @@ namespace AndroidRedirectNotification
                                 )
                             ), aesKey)
                         );
-                        buffer = stream.Read();
+                        buffer = await stream.ReadAsync();
                         byte[] utf8Message = AES.MessageByteCryption.Decrypt(buffer, aesKey);
                         string message = Encoding.UTF8.GetString(utf8Message);
                         var data = JsonSerializer.Deserialize<MyNotificationData>(message);
@@ -77,8 +102,8 @@ namespace AndroidRedirectNotification
                             OnMessageReceived(data);
                     }
                 }
-                catch { }
             }
+            catch { }
         }
     }
 }
