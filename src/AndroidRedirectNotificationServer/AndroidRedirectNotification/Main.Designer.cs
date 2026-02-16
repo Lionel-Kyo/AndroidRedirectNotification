@@ -37,7 +37,6 @@
             label1 = new Label();
             tableLayoutPanel1 = new TableLayoutPanel();
             dgv = new DataGridView();
-            menu = new MenuStrip();
             dgvDateTimeId = new DataGridViewTextBoxColumn();
             dgvTag = new DataGridViewTextBoxColumn();
             dgvPackageName = new DataGridViewTextBoxColumn();
@@ -49,6 +48,9 @@
             dgvFlags = new DataGridViewTextBoxColumn();
             dgvMessage = new DataGridViewTextBoxColumn();
             dgvData = new DataGridViewTextBoxColumn();
+            menu = new MenuStrip();
+            otherToolStripMenuItem = new ToolStripMenuItem();
+            exceptionHistoryToolStripMenuItem = new ToolStripMenuItem();
             menu_Settings = new ToolStripMenuItem();
             dgvMenu.SuspendLayout();
             tableLayoutPanel1.SuspendLayout();
@@ -132,17 +134,6 @@
             dgv.Size = new Size(978, 249);
             dgv.TabIndex = 0;
             // 
-            // menu
-            // 
-            menu.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            menu.Items.AddRange(new ToolStripItem[] { menu_Settings });
-            menu.Location = new Point(0, 0);
-            menu.Name = "menu";
-            menu.Padding = new Padding(8, 2, 0, 2);
-            menu.Size = new Size(984, 29);
-            menu.TabIndex = 1;
-            menu.Text = "menuStrip1";
-            // 
             // dgvDateTimeId
             // 
             dgvDateTimeId.HeaderText = "DateTime (Id)";
@@ -214,6 +205,31 @@
             dgvData.ReadOnly = true;
             dgvData.Visible = false;
             // 
+            // menu
+            // 
+            menu.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            menu.Items.AddRange(new ToolStripItem[] { menu_Settings, otherToolStripMenuItem });
+            menu.Location = new Point(0, 0);
+            menu.Name = "menu";
+            menu.Padding = new Padding(8, 2, 0, 2);
+            menu.Size = new Size(984, 29);
+            menu.TabIndex = 1;
+            menu.Text = "menuStrip1";
+            // 
+            // otherToolStripMenuItem
+            // 
+            otherToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { exceptionHistoryToolStripMenuItem });
+            otherToolStripMenuItem.Name = "otherToolStripMenuItem";
+            otherToolStripMenuItem.Size = new Size(62, 25);
+            otherToolStripMenuItem.Text = "Other";
+            // 
+            // exceptionHistoryToolStripMenuItem
+            // 
+            exceptionHistoryToolStripMenuItem.Name = "exceptionHistoryToolStripMenuItem";
+            exceptionHistoryToolStripMenuItem.Size = new Size(200, 26);
+            exceptionHistoryToolStripMenuItem.Text = "Exception History";
+            exceptionHistoryToolStripMenuItem.Click += exceptionHistoryToolStripMenuItem_Click;
+            // 
             // Main
             // 
             AutoScaleDimensions = new SizeF(9F, 21F);
@@ -257,5 +273,7 @@
         private DataGridViewTextBoxColumn dgvFlags;
         private DataGridViewTextBoxColumn dgvMessage;
         private DataGridViewTextBoxColumn dgvData;
+        private ToolStripMenuItem otherToolStripMenuItem;
+        private ToolStripMenuItem exceptionHistoryToolStripMenuItem;
     }
 }

@@ -67,7 +67,7 @@ namespace AndroidRedirectNotification
 
                     _ = Task.Run(() => HandleClientAsync(client), token);
                 }
-                catch { }
+                catch (Exception ex) { ExceptionRecord.AddExceptionRecord(ex); }
             }
         }
 
@@ -103,7 +103,7 @@ namespace AndroidRedirectNotification
                     }
                 }
             }
-            catch { }
+            catch (Exception ex) { ExceptionRecord.AddExceptionRecord(ex); }
         }
     }
 }

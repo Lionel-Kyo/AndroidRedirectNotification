@@ -1,4 +1,5 @@
 using Microsoft.Toolkit.Uwp.Notifications;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Windows.Forms;
@@ -8,6 +9,7 @@ namespace AndroidRedirectNotification
 {
     internal partial class Main : Form
     {
+        private object dgvLock;
         private Settings settings;
         private MyTcpListener myTcpListener;
         private long lastRecvTime;
@@ -16,6 +18,7 @@ namespace AndroidRedirectNotification
         public Main()
         {
             InitializeComponent();
+            this.dgvLock = new object();
             this.dgv.CellMouseDown += dgv_CellMouseDown;
             this.dgv.CellMouseDown += dgv_CellMouseDown2;
             try
@@ -24,6 +27,7 @@ namespace AndroidRedirectNotification
             }
             catch (Exception ex)
             {
+                ExceptionRecord.AddExceptionRecord(ex);
                 MessageBox.Show($"Read Settings Failed.\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 this.Close();
                 return;
@@ -50,8 +54,9 @@ namespace AndroidRedirectNotification
                 this.myTcpListener.OnMessageReceived += MyTcpListener_OnMessageReceived;
                 this.myTcpListener.Start();
             }
-            catch
+            catch (Exception ex)
             {
+                ExceptionRecord.AddExceptionRecord(ex);
                 MessageBox.Show($"Cannot start server with port: {port}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
@@ -88,21 +93,24 @@ namespace AndroidRedirectNotification
                     {
                         try
                         {
-                            int i = this.dgv.Rows.Add();
-                            DataGridViewRow row = this.dgv.Rows[i];
-                            row.Cells["dgvDateTimeId"].Value = $"{data.GetDateTime(): yyyy-MM-dd HH:mm:ss} ({data.Id})";
-                            row.Cells["dgvTag"].Value = data.Tag;
-                            row.Cells["dgvPackageName"].Value = data.PackageName;
-                            row.Cells["dgvAppName"].Value = data.AppName;
-                            row.Cells["dgvTitle"].Value = data.Title;
-                            row.Cells["dgvMessage"].Value = data.Message;
-                            row.Cells["dgvCategory"].Value = data.Category;
-                            row.Cells["dgvImportantce"].Value = data.Importantce;
-                            row.Cells["dgvActionTitles"].Value = string.Join(", ", data.ActionTitles);
-                            row.Cells["dgvFlags"].Value = string.Join(", ", data.Flags);
-                            row.Cells["dgvData"].Value = data;
+                            lock (this.dgvLock)
+                            {
+                                int i = this.dgv.Rows.Add();
+                                DataGridViewRow row = this.dgv.Rows[i];
+                                row.Cells["dgvDateTimeId"].Value = $"{data.GetDateTime(): yyyy-MM-dd HH:mm:ss} ({data.Id})";
+                                row.Cells["dgvTag"].Value = data.Tag;
+                                row.Cells["dgvPackageName"].Value = data.PackageName;
+                                row.Cells["dgvAppName"].Value = data.AppName;
+                                row.Cells["dgvTitle"].Value = data.Title;
+                                row.Cells["dgvMessage"].Value = data.Message;
+                                row.Cells["dgvCategory"].Value = data.Category;
+                                row.Cells["dgvImportantce"].Value = data.Importantce;
+                                row.Cells["dgvActionTitles"].Value = string.Join(", ", data.ActionTitles);
+                                row.Cells["dgvFlags"].Value = string.Join(", ", data.Flags);
+                                row.Cells["dgvData"].Value = data;
+                            }
                         }
-                        catch { }
+                        catch (Exception ex) { ExceptionRecord.AddExceptionRecord(ex); }
                     });
                     if (settings.ShowWindowsNotification &&
                         data.Category != NotificationCategory.CategoryTransport && !data.Flags.Contains("OngoingEvent"))
@@ -112,7 +120,7 @@ namespace AndroidRedirectNotification
                     }
                 }
             }
-            catch { }
+            catch (Exception ex) { ExceptionRecord.AddExceptionRecord(ex); }
         }
 
         public void ShowWindowsNotification(string title, string message)
@@ -125,12 +133,18 @@ namespace AndroidRedirectNotification
 
         private void recvMsgMenu_SelectAll_Click(object? sender, EventArgs e)
         {
-            this.dgv.SelectAll();
+            lock (this.dgvLock)
+            {
+                this.dgv.SelectAll();
+            }
         }
 
         private void recvMsgMenu_ClearAll_Click(object? sender, EventArgs e)
         {
-            this.dgv.Rows.Clear();
+            lock (this.dgvLock)
+            {
+                this.dgv.Rows.Clear();
+            }
         }
 
         private void menu_Settings_General_Click(object? sender, EventArgs e)
@@ -154,9 +168,12 @@ namespace AndroidRedirectNotification
         {
             if (e.Button == MouseButtons.Right && e.RowIndex >= 0)
             {
-                this.dgv.ClearSelection();
-                this.dgv.Rows[e.RowIndex].Cells[e.ColumnIndex].Selected = true;
-                this.dgv.CurrentCell = dgv.Rows[e.RowIndex].Cells[e.ColumnIndex];
+                lock (this.dgvLock)
+                {
+                    this.dgv.ClearSelection();
+                    this.dgv.Rows[e.RowIndex].Cells[e.ColumnIndex].Selected = true;
+                    this.dgv.CurrentCell = dgv.Rows[e.RowIndex].Cells[e.ColumnIndex];
+                }
             }
         }
 
@@ -167,25 +184,34 @@ namespace AndroidRedirectNotification
 
             ContextMenuStrip menu = new ContextMenuStrip();
             {
-                var row = dgv.Rows[e.RowIndex];
-
-                if (e.ColumnIndex == 9)
+                lock (this.dgvLock)
                 {
-                    menu.Items.Add("Show Message", null, (_s, _e) =>
+                    var row = dgv.Rows[e.RowIndex];
+
+                    if (e.ColumnIndex == 9)
                     {
-                        var data = (MyNotificationData)dgv.Rows[e.RowIndex].Cells["dgvData"].Value;
-                        ViewMsgForm viewTextForm = new ViewMsgForm(data.Message, new List<string> { data.PictureIcon, data.Picture });
-                        viewTextForm.StartPosition = FormStartPosition.CenterParent;
-                        viewTextForm.ShowDialog();
-                    });
-                    menu.Items.Add(new ToolStripSeparator());
+                        menu.Items.Add("Show Message", null, (_s, _e) =>
+                        {
+                            var data = (MyNotificationData)dgv.Rows[e.RowIndex].Cells["dgvData"].Value;
+                            ViewMsgForm viewTextForm = new ViewMsgForm(data.Message, new List<string> { data.PictureIcon, data.Picture });
+                            viewTextForm.StartPosition = FormStartPosition.CenterParent;
+                            viewTextForm.ShowDialog();
+                        });
+                        menu.Items.Add(new ToolStripSeparator());
+                    }
+
+                    menu.Items.Add("Select All", null, recvMsgMenu_SelectAll_Click);
+                    menu.Items.Add("Clear All", null, recvMsgMenu_ClearAll_Click);
+
+                    menu.Show(Cursor.Position);
                 }
-
-                menu.Items.Add("Select All", null, recvMsgMenu_SelectAll_Click);
-                menu.Items.Add("Clear All", null, recvMsgMenu_ClearAll_Click);
-
-                menu.Show(Cursor.Position);
             }
+        }
+
+        private void exceptionHistoryToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var form = new ExcerptionRecordViewer();
+            form.Show();
         }
     }
 }
