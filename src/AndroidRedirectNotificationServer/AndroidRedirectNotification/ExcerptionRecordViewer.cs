@@ -7,7 +7,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace AndroidRedirectNotification
 {
@@ -18,6 +17,7 @@ namespace AndroidRedirectNotification
         public ExcerptionRecordViewer()
         {
             InitializeComponent();
+            this.KeyPreview = true;
             this.dgvLock = new object();
             ExceptionRecord.OnRecordAdded += AddRecord;
             ExceptionRecord.OnRecordsCleared += ClearRecord;
@@ -55,6 +55,14 @@ namespace AndroidRedirectNotification
         {
             ExceptionRecord.OnRecordAdded -= AddRecord;
             ExceptionRecord.OnRecordsCleared -= ClearRecord;
+        }
+
+        private void ExcerptionRecordViewer_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Escape)
+            {
+                this.Close();
+            }
         }
     }
 }

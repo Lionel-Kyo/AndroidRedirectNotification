@@ -12,8 +12,7 @@ namespace AndroidRedirectNotification
         private object dgvLock;
         private Settings settings;
         private MyTcpListener myTcpListener;
-        private long lastRecvTime;
-        private MyNotificationData? lastNotificationData;
+        private DuplicatedNotificationTracker duplicatedNotificationTracker;
 
         public Main()
         {
@@ -24,6 +23,10 @@ namespace AndroidRedirectNotification
             try
             {
                 this.settings = Settings.ReadSettings()!;
+                if (this.settings.SkipDuplicateMsgMs > 99999)
+                    this.settings.SkipDuplicateMsgMs = 99999;
+                else if (this.settings.SkipDuplicateMsgMs < 100)
+                    this.settings.SkipDuplicateMsgMs = 2000;
             }
             catch (Exception ex)
             {
@@ -38,6 +41,7 @@ namespace AndroidRedirectNotification
                 if (this.settings == null)
                     this.settings = new Settings();
                 this.myTcpListener = null!;
+                this.duplicatedNotificationTracker = new DuplicatedNotificationTracker(new TimeSpan(0, 0, 0, 0, settings.SkipDuplicateMsgMs), 120000);
             }
             _ = this.RestartTcpListenerAsync();
         }
@@ -72,18 +76,11 @@ namespace AndroidRedirectNotification
                     appName = data.PackageName;
 
                 long recvTime = Program.ApplicationTime.ElapsedMilliseconds;
-                bool sameAsLastData = data.Equals(this.lastNotificationData);
-                bool addNewMessage = !this.settings.SkipDuplicateMsg ||
-                    (this.settings.SkipDuplicateMsg && !sameAsLastData ||
-                    (this.settings.SkipDuplicateMsg && sameAsLastData && (recvTime - this.lastRecvTime >= settings.SkipDuplicateMsgMs)));
-
-                this.lastNotificationData = data;
-                this.lastRecvTime = recvTime;
+                bool isDuplicated = duplicatedNotificationTracker.IsDuplicate(data);
+                bool addNewMessage = !this.settings.SkipDuplicateMsg || (this.settings.SkipDuplicateMsg && !isDuplicated);
 
                 if (addNewMessage)
                 {
-                    lastNotificationData = data;
-
                     var jsonSerializerOptions = new JsonSerializerOptions
                     {
                         Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
@@ -158,6 +155,7 @@ namespace AndroidRedirectNotification
                 return;
             this.settings = newSettings;
 
+            this.duplicatedNotificationTracker.Window = new TimeSpan(0, 0, 0, 0, newSettings.SkipDuplicateMsgMs);
             if (oldSettings.Port != newSettings.Port)
             {
                 _ = this.RestartTcpListenerAsync();

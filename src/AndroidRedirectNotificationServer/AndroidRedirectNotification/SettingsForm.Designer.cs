@@ -29,13 +29,13 @@
         private void InitializeComponent()
         {
             settingsPanel = new Panel();
+            showWindowsNotificationCheck = new CheckBox();
             skipDuplicateMsgLabel = new Label();
             skipDuplicateMsgNum = new NumericUpDown();
             skipDuplicateMsgCheck = new CheckBox();
             applyBtn = new Button();
             portNum = new NumericUpDown();
             portLabel = new Label();
-            showWindowsNotificationCheck = new CheckBox();
             settingsPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)skipDuplicateMsgNum).BeginInit();
             ((System.ComponentModel.ISupportInitialize)portNum).BeginInit();
@@ -57,6 +57,16 @@
             settingsPanel.Size = new Size(484, 361);
             settingsPanel.TabIndex = 0;
             // 
+            // showWindowsNotificationCheck
+            // 
+            showWindowsNotificationCheck.AutoSize = true;
+            showWindowsNotificationCheck.Location = new Point(12, 101);
+            showWindowsNotificationCheck.Name = "showWindowsNotificationCheck";
+            showWindowsNotificationCheck.Size = new Size(222, 25);
+            showWindowsNotificationCheck.TabIndex = 7;
+            showWindowsNotificationCheck.Text = "Show Windows Notification";
+            showWindowsNotificationCheck.UseVisualStyleBackColor = true;
+            // 
             // skipDuplicateMsgLabel
             // 
             skipDuplicateMsgLabel.AutoSize = true;
@@ -70,7 +80,7 @@
             // 
             skipDuplicateMsgNum.Location = new Point(208, 53);
             skipDuplicateMsgNum.Maximum = new decimal(new int[] { 99999, 0, 0, 0 });
-            skipDuplicateMsgNum.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
+            skipDuplicateMsgNum.Minimum = new decimal(new int[] { 100, 0, 0, 0 });
             skipDuplicateMsgNum.Name = "skipDuplicateMsgNum";
             skipDuplicateMsgNum.Size = new Size(70, 29);
             skipDuplicateMsgNum.TabIndex = 5;
@@ -116,16 +126,6 @@
             portLabel.Size = new Size(90, 21);
             portLabel.TabIndex = 0;
             portLabel.Text = "Server Port:";
-            // 
-            // showWindowsNotificationCheck
-            // 
-            showWindowsNotificationCheck.AutoSize = true;
-            showWindowsNotificationCheck.Location = new Point(12, 101);
-            showWindowsNotificationCheck.Name = "showWindowsNotificationCheck";
-            showWindowsNotificationCheck.Size = new Size(222, 25);
-            showWindowsNotificationCheck.TabIndex = 7;
-            showWindowsNotificationCheck.Text = "Show Windows Notification";
-            showWindowsNotificationCheck.UseVisualStyleBackColor = true;
             // 
             // SettingsForm
             // 

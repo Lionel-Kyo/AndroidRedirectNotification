@@ -45,7 +45,7 @@
             dgv.Columns.AddRange(new DataGridViewColumn[] { dgvDateTime, dgvName, dgvMessage, dgvRecord });
             dgv.Dock = DockStyle.Fill;
             dgv.Location = new Point(0, 0);
-            dgv.Margin = new Padding(4, 4, 4, 4);
+            dgv.Margin = new Padding(4);
             dgv.Name = "dgv";
             dgv.ReadOnly = true;
             dgv.RowHeadersVisible = false;
@@ -86,11 +86,12 @@
             ClientSize = new Size(584, 261);
             Controls.Add(dgv);
             Font = new Font("Segoe UI", 12F);
-            Margin = new Padding(4, 4, 4, 4);
+            Margin = new Padding(4);
             Name = "ExcerptionRecordViewer";
             ShowIcon = false;
             Text = "Excerption Record Viewer";
             FormClosing += ExcerptionRecordViewer_FormClosing;
+            KeyDown += ExcerptionRecordViewer_KeyDown;
             ((System.ComponentModel.ISupportInitialize)dgv).EndInit();
             ResumeLayout(false);
         }
