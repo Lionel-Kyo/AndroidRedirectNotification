@@ -20,7 +20,8 @@ namespace AndroidRedirectNotification
                 x.PackageName == y.PackageName && x.AppName == y.AppName &&
                 x.Title == y.Title && x.Message == y.Message &&
                 x.Category == y.Category && x.Importantce == y.Importantce &&
-                x.ActionTitles.SequenceEqual(y.ActionTitles) && x.Flags.SequenceEqual(y.Flags);
+                x.ActionTitles.SequenceEqual(y.ActionTitles) && x.Flags.SequenceEqual(y.Flags) &&
+                x.Picture?.Length == y.Picture?.Length && x.PictureIcon?.Length == y.PictureIcon?.Length;
         }
 
         public int GetHashCode(MyNotificationData data)

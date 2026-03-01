@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 
 namespace AndroidRedirectNotification
 {
@@ -12,7 +13,12 @@ namespace AndroidRedirectNotification
         static void Main()
         {
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+            AppDomain.CurrentDomain.FirstChanceException += (s, e) =>
+            {
+                File.AppendAllText("FirstChance.log", $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} | {e.Exception}\n", Encoding.UTF8);
+            };
             Application.ThreadException += Application_ThreadException;
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
@@ -23,12 +29,14 @@ namespace AndroidRedirectNotification
         {
             if (e.ExceptionObject is Exception ex)
             {
+                File.WriteAllText("./Error.log", $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} | {ex}\n", Encoding.UTF8);
                 ExceptionRecord.AddExceptionRecord(ex);
             }
         }
 
         private static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
         {
+            File.WriteAllText("./Error.log", $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} | {e.Exception}\n", Encoding.UTF8);
             ExceptionRecord.AddExceptionRecord(e.Exception);
         }
     }
