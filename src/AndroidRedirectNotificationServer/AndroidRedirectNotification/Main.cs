@@ -120,12 +120,39 @@ namespace AndroidRedirectNotification
             catch (Exception ex) { ExceptionRecord.AddExceptionRecord(ex); }
         }
 
+        //public void ShowWindowsNotification(string title, string message)
+        //{
+        //    new ToastContentBuilder()
+        //        .AddText(title)
+        //        .AddText(message)
+        //        .Show();
+        //}
+
+        private void ShowWindowsNotificationThreadUnsafe(string title, string message)
+        {
+            try
+            {
+                new ToastContentBuilder()
+                    .AddText(title)
+                    .AddText(message)
+                    .Show();
+            }
+            catch (Exception ex) { ExceptionRecord.AddExceptionRecord(ex); }
+        }
+
         public void ShowWindowsNotification(string title, string message)
         {
-            new ToastContentBuilder()
-                .AddText(title)
-                .AddText(message)
-                .Show();
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke(() =>
+                {
+                    ShowWindowsNotificationThreadUnsafe(title, message);
+                });
+            }
+            else
+            {
+                ShowWindowsNotificationThreadUnsafe(title, message);
+            }
         }
 
         private void recvMsgMenu_SelectAll_Click(object? sender, EventArgs e)
