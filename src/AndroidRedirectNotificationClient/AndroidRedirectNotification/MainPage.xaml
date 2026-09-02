@@ -1,67 +1,162 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="AndroidRedirectNotification.MainPage">
+             x:Class="AndroidRedirectNotification.MainPage"
+             BackgroundColor="#121218">
 
-    <ScrollView>
-        <VerticalStackLayout
-            Padding="30,0"
-            Spacing="25">
+    <Grid RowDefinitions="Auto, *">
+        <!-- App Header Bar -->
+        <Border Grid.Row="0" 
+                BackgroundColor="#1E1E2A" 
+                StrokeThickness="0" 
+                Padding="20,16">
+            <Grid ColumnDefinitions="*, Auto">
+                <VerticalStackLayout Grid.Column="0">
+                    <Label Text="Redirect Notification" 
+                           FontSize="20" 
+                           FontAttributes="Bold" 
+                           TextColor="#E6E1E5" />
+                    <!--<Label Text="Server Status &amp; Logs" 
+                           FontSize="12" 
+                           TextColor="#D0BCFF" />-->
+                </VerticalStackLayout>
 
-            <Label
-                Text="Server Settings:"
-                Style="{StaticResource Headline}"
-                SemanticProperties.HeadingLevel="Level1" />
+                <!--<Border Grid.Column="1" 
+                        BackgroundColor="#2B2938" 
+                        StrokeShape="RoundRectangle 12" 
+                        Padding="10,6" 
+                        VerticalOptions="Center">
+                    <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
+                        <BoxView WidthRequest="8" HeightRequest="8" CornerRadius="4" Color="#4CAF50" VerticalOptions="Center"/>
+                        <Label x:Name="statusLabel" Text="Connected" FontSize="12" TextColor="#E6E1E5" VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+                </Border>-->
+            </Grid>
+        </Border>
 
-            <HorizontalStackLayout
-                Padding="0,0"
-                Spacing="15"
-                HorizontalOptions="FillAndExpand">
-                <Label
-                    Text="IP Address:"
-                    SemanticProperties.HeadingLevel="Level5"
-                    VerticalOptions="Center" />
-                <Entry
-                    Keyboard="Url"
-                    x:Name="ipEditEntry"
-                    MaxLength="16384"
-                    Text="192.168.1.1" 
-                    HorizontalOptions="FillAndExpand" />
-            </HorizontalStackLayout>
+        <!-- Main Content -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="20" Spacing="20">
 
-            <HorizontalStackLayout
-                Padding="0,0"
-                Spacing="15"
-                HorizontalOptions="FillAndExpand">
-                <Label
-                    Text="Port:"
-                    SemanticProperties.HeadingLevel="Level5"
-                    VerticalOptions="Center" />
-                <Entry
-                    Keyboard="Numeric"
-                    x:Name="portEntry"
-                    MaxLength="5"
-                    Text="443" 
-                    HorizontalOptions="FillAndExpand" />
-            </HorizontalStackLayout>
+                <!-- Server Settings Card -->
+                <Border BackgroundColor="#1E1E2A"
+                        Stroke="#2D2D3F"
+                        StrokeThickness="1"
+                        StrokeShape="RoundRectangle 16"
+                        Padding="20">
+                    <VerticalStackLayout Spacing="16">
+                        <Label Text="Server Configuration" 
+                               FontSize="16" 
+                               FontAttributes="Bold" 
+                               TextColor="#D0BCFF" />
 
-            <Button
-                x:Name="editBtn"
-                Text="Apply" 
-                Clicked="OnEditBtnClicked"
-                HorizontalOptions="Fill" />
+                        <Grid RowDefinitions="Auto, Auto" 
+                              ColumnDefinitions="*, *" 
+                              RowSpacing="12" 
+                              ColumnSpacing="12">
 
-            <Label
-                Text="Last Received Message:"
-                Style="{StaticResource Headline}"
-                SemanticProperties.HeadingLevel="Level1" />
+                            <VerticalStackLayout Grid.Row="0" Grid.Column="0" Spacing="6">
+                                <Label Text="IP Address" FontSize="12" TextColor="#A0A0B0" />
+                                <Entry x:Name="ipEditEntry"
+                                       Text="192.168.1.1"
+                                       Keyboard="Url"
+                                       TextColor="#E6E1E5"
+                                       BackgroundColor="#2B2938"
+                                       FontSize="14"
+                                       HeightRequest="44" />
+                            </VerticalStackLayout>
 
-            <Label
-                x:Name="welcomeLabel"
-                Text="No Message Received"
-                Style="{StaticResource SubHeadline}"
-                SemanticProperties.HeadingLevel="Level2"/>
-        </VerticalStackLayout>
-    </ScrollView>
+                            <VerticalStackLayout Grid.Row="0" Grid.Column="1" Spacing="6">
+                                <Label Text="Port" FontSize="12" TextColor="#A0A0B0" />
+                                <Entry x:Name="portEntry"
+                                       Text="443"
+                                       Keyboard="Numeric"
+                                       MaxLength="5"
+                                       TextColor="#E6E1E5"
+                                       BackgroundColor="#2B2938"
+                                       FontSize="14"
+                                       HeightRequest="44" />
+                            </VerticalStackLayout>
+
+                            <Button Grid.Row="1" Grid.ColumnSpan="2"
+                                    x:Name="editBtn"
+                                    Text="Apply Configuration"
+                                    Clicked="OnEditBtnClicked"
+                                    BackgroundColor="#9A72EC"
+                                    TextColor="#FFFFFF"
+                                    FontAttributes="Bold"
+                                    CornerRadius="10"
+                                    HeightRequest="44" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Notification History Header -->
+                <Grid ColumnDefinitions="*, Auto" Margin="0,4,0,0">
+                    <Label Text="Notification History" 
+                           FontSize="18" 
+                           FontAttributes="Bold" 
+                           TextColor="#E6E1E5" 
+                           VerticalOptions="Center" />
+
+                    <!-- Redesigned Clear All Pill Button -->
+                    <Button Grid.Column="1"
+                            x:Name="clearHistoryBtn"
+                            Text="Clear All"
+                            FontSize="12"
+                            FontAttributes="Bold"
+                            TextColor="#FFB4AB"
+                            BackgroundColor="#2D1F21"
+                            CornerRadius="14"
+                            HeightRequest="32"
+                            Padding="14,0"
+                            Clicked="OnClearHistoryClicked" />
+                </Grid>
+
+                <!-- Notification History List -->
+                <CollectionView x:Name="historyCollectionView">
+                    <CollectionView.EmptyView>
+                        <Border BackgroundColor="#1E1E2A" 
+                                StrokeThickness="0" 
+                                StrokeShape="RoundRectangle 12" 
+                                Padding="24"
+                                Margin="0,8">
+                            <Label Text="No notifications recorded yet." 
+                                   HorizontalOptions="Center" 
+                                   TextColor="#808090" 
+                                   FontSize="14" />
+                        </Border>
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border BackgroundColor="#1E1E2A"
+                                    Stroke="#2D2D3F"
+                                    StrokeThickness="1"
+                                    StrokeShape="RoundRectangle 12"
+                                    Margin="0,0,0,10"
+                                    Padding="14">
+                                <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto" RowSpacing="6">
+                                    <Label Grid.Row="0" Grid.Column="0"
+                                           Text="{Binding Title}"
+                                           FontAttributes="Bold"
+                                           FontSize="14"
+                                           TextColor="#D0BCFF" />
+                                    <Label Grid.Row="0" Grid.Column="1"
+                                           Text="{Binding Timestamp}"
+                                           FontSize="11"
+                                           TextColor="#808090" />
+                                    <Label Grid.Row="1" Grid.ColumnSpan="2"
+                                           Text="{Binding Message}"
+                                           FontSize="13"
+                                           TextColor="#E6E1E5" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
 
 </ContentPage>
