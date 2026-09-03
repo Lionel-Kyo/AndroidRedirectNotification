@@ -16,21 +16,7 @@
                            FontSize="20" 
                            FontAttributes="Bold" 
                            TextColor="#E6E1E5" />
-                    <!--<Label Text="Server Status &amp; Logs" 
-                           FontSize="12" 
-                           TextColor="#D0BCFF" />-->
                 </VerticalStackLayout>
-
-                <!--<Border Grid.Column="1" 
-                        BackgroundColor="#2B2938" 
-                        StrokeShape="RoundRectangle 12" 
-                        Padding="10,6" 
-                        VerticalOptions="Center">
-                    <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
-                        <BoxView WidthRequest="8" HeightRequest="8" CornerRadius="4" Color="#4CAF50" VerticalOptions="Center"/>
-                        <Label x:Name="statusLabel" Text="Connected" FontSize="12" TextColor="#E6E1E5" VerticalOptions="Center"/>
-                    </HorizontalStackLayout>
-                </Border>-->
             </Grid>
         </Border>
 
@@ -50,7 +36,7 @@
                                FontAttributes="Bold" 
                                TextColor="#D0BCFF" />
 
-                        <Grid RowDefinitions="Auto, Auto" 
+                        <Grid RowDefinitions="Auto, Auto, Auto" 
                               ColumnDefinitions="*, *" 
                               RowSpacing="12" 
                               ColumnSpacing="12">
@@ -78,7 +64,37 @@
                                        HeightRequest="44" />
                             </VerticalStackLayout>
 
-                            <Button Grid.Row="1" Grid.ColumnSpan="2"
+                            <!-- Keep History Duration & Unit Picker -->
+                            <VerticalStackLayout Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Spacing="6">
+                                <Label Text="Keep History Duration (0 = Forever)" FontSize="12" TextColor="#A0A0B0" />
+                                <Grid ColumnDefinitions="*, 120" ColumnSpacing="8">
+                                    <Entry x:Name="historyValueEntry"
+                                           Grid.Column="0"
+                                           Text="7"
+                                           Keyboard="Numeric"
+                                           TextColor="#E6E1E5"
+                                           BackgroundColor="#2B2938"
+                                           FontSize="14"
+                                           HeightRequest="44" />
+                                    <Picker x:Name="historyUnitPicker"
+                                            Grid.Column="1"
+                                            TextColor="#E6E1E5"
+                                            TitleColor="#808090"
+                                            BackgroundColor="#2B2938"
+                                            HeightRequest="44">
+                                        <Picker.ItemsSource>
+                                            <x:Array Type="{x:Type x:String}">
+                                                <x:String>Seconds</x:String>
+                                                <x:String>Minutes</x:String>
+                                                <x:String>Hours</x:String>
+                                                <x:String>Days</x:String>
+                                            </x:Array>
+                                        </Picker.ItemsSource>
+                                    </Picker>
+                                </Grid>
+                            </VerticalStackLayout>
+
+                            <Button Grid.Row="2" Grid.ColumnSpan="2"
                                     x:Name="editBtn"
                                     Text="Apply Configuration"
                                     Clicked="OnEditBtnClicked"
@@ -99,7 +115,6 @@
                            TextColor="#E6E1E5" 
                            VerticalOptions="Center" />
 
-                    <!-- Redesigned Clear All Pill Button -->
                     <Button Grid.Column="1"
                             x:Name="clearHistoryBtn"
                             Text="Clear All"
@@ -158,5 +173,4 @@
             </VerticalStackLayout>
         </ScrollView>
     </Grid>
-
 </ContentPage>
