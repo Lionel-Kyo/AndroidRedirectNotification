@@ -91,26 +91,29 @@ public class NotificationReceiverService : NotificationListenerService
 
         string appName = GetApplicationName(packageName) ?? packageName;
 
-        var myData = new MyNotificationData()
+        if (MainPage.IsSendToServerEnabled)
         {
-            TimeStamp = timestamp,
-            Id = id,
-            Tag = tag,
-            PackageName = packageName,
-            AppName = appName,
-            Title = title,
-            Message = message,
-            Picture = pictureBase64,
-            PictureIcon = pictureIconBase64,
-            Category = notification.Category ?? "",
-            Importantce = notificationImportance,
-            ActionTitles = actionTitles,
-            Flags = Enum.GetValues(typeof(NotificationFlags)).Cast<NotificationFlags>().Where(f => notification.Flags.HasFlag(f)).Select(f => f.ToString()).ToList()
-        };
+            var myData = new MyNotificationData()
+            {
+                TimeStamp = timestamp,
+                Id = id,
+                Tag = tag,
+                PackageName = packageName,
+                AppName = appName,
+                Title = title,
+                Message = message,
+                Picture = pictureBase64,
+                PictureIcon = pictureIconBase64,
+                Category = notification.Category ?? "",
+                Importantce = notificationImportance,
+                ActionTitles = actionTitles,
+                Flags = Enum.GetValues(typeof(NotificationFlags)).Cast<NotificationFlags>().Where(f => notification.Flags.HasFlag(f)).Select(f => f.ToString()).ToList()
+            };
 
-        string jsonText = JsonSerializer.Serialize(myData, jsonSerializerOptions);
+            string jsonText = JsonSerializer.Serialize(myData, jsonSerializerOptions);
 
-        _ = SendToServerAsync(jsonText);
+            _ = SendToServerAsync(jsonText);
+        }
 
         string displayTitle = $"{(string.IsNullOrWhiteSpace(appName) ? packageName : appName)} • {title}";
         MainPage.LogNotification(message, displayTitle, utcNow);
