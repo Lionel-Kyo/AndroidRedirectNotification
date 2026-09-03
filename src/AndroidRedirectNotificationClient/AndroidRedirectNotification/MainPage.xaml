@@ -36,7 +36,7 @@
                                FontAttributes="Bold" 
                                TextColor="#D0BCFF" />
 
-                        <Grid RowDefinitions="Auto, Auto, Auto" 
+                        <Grid RowDefinitions="Auto, Auto, Auto, Auto" 
                               ColumnDefinitions="*, *" 
                               RowSpacing="12" 
                               ColumnSpacing="12">
@@ -94,7 +94,20 @@
                                 </Grid>
                             </VerticalStackLayout>
 
-                            <Button Grid.Row="2" Grid.ColumnSpan="2"
+                            <!-- Send To Server Toggle Switch -->
+                            <Grid Grid.Row="2" Grid.ColumnSpan="2" ColumnDefinitions="*, Auto" VerticalOptions="Center">
+                                <VerticalStackLayout VerticalOptions="Center">
+                                    <Label Text="Send to Server" FontSize="14" FontAttributes="Bold" TextColor="#E6E1E5" />
+                                    <Label Text="Enable or disable forwarding notifications" FontSize="11" TextColor="#808090" />
+                                </VerticalStackLayout>
+                                <Switch x:Name="sendToServerSwitch"
+                                        Grid.Column="1"
+                                        OnColor="#9A72EC"
+                                        ThumbColor="#E6E1E5"
+                                        VerticalOptions="Center" />
+                            </Grid>
+
+                            <Button Grid.Row="3" Grid.ColumnSpan="2"
                                     x:Name="editBtn"
                                     Text="Apply Configuration"
                                     Clicked="OnEditBtnClicked"

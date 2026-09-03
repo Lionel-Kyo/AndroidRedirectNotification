@@ -10,8 +10,9 @@ namespace AndroidRedirectNotification
         public static MainPage? Instance { get; private set; }
         public static string ServerIp { get; private set; } = "192.168.1.1";
         public static ushort ServerPort { get; private set; } = 443;
-        public static double KeepHistoryValue { get; private set; } = 7;
-        public static string KeepHistoryUnit { get; private set; } = "Days";
+        public static double KeepHistoryValue { get; private set; } = 24;
+        public static string KeepHistoryUnit { get; private set; } = "Hours";
+        public static bool IsSendToServerEnabled { get; private set; } = true;
 
         public Entry IpEditEntry => ipEditEntry;
         public Entry PortEditEntry => portEntry;
@@ -29,20 +30,21 @@ namespace AndroidRedirectNotification
 
             ServerIp = Preferences.Get("server_ip", "192.168.1.1");
             ServerPort = (ushort)Preferences.Get("server_port", 443);
-            KeepHistoryValue = Preferences.Get("keep_history_value", 7.0);
-            KeepHistoryUnit = Preferences.Get("keep_history_unit", "Days");
+            KeepHistoryValue = Preferences.Get("keep_history_value", 24.0);
+            KeepHistoryUnit = Preferences.Get("keep_history_unit", "Hours");
+            IsSendToServerEnabled = Preferences.Get("send_to_server_enabled", true);
 
             this.ipEditEntry.Text = ServerIp;
             this.portEntry.Text = ServerPort.ToString();
             this.historyValueEntry.Text = KeepHistoryValue.ToString();
             this.historyUnitPicker.SelectedItem = KeepHistoryUnit;
+            this.sendToServerSwitch.IsToggled = IsSendToServerEnabled;
 
             LoadAndCleanHistory();
         }
 
         private static DateTimeOffset? GetCutoffDate(double value, string unit)
         {
-            // 0: keep forever
             if (value <= 0) 
                 return null;
 
@@ -52,7 +54,7 @@ namespace AndroidRedirectNotification
                 "Minutes" => DateTimeOffset.UtcNow.AddMinutes(-value),
                 "Hours" => DateTimeOffset.UtcNow.AddHours(-value),
                 "Days" => DateTimeOffset.UtcNow.AddDays(-value),
-                _ => DateTimeOffset.UtcNow.AddDays(-value)
+                _ => DateTimeOffset.UtcNow.AddHours(-value)
             };
         }
 
@@ -121,6 +123,11 @@ namespace AndroidRedirectNotification
             });
         }
 
+        public static void LogNotification(string message, string title, DateTimeOffset utcDateTime)
+        {
+            Instance?.AddNotification(message, title, utcDateTime);
+        }
+
         private void CleanOldNotificationsAndSave()
         {
             var cutoffDate = GetCutoffDate(KeepHistoryValue, KeepHistoryUnit);
@@ -136,11 +143,6 @@ namespace AndroidRedirectNotification
             }
 
             SaveHistory();
-        }
-
-        public static void LogNotification(string message, string title, DateTimeOffset utcDateTime)
-        {
-            Instance?.AddNotification(message, title, utcDateTime);
         }
 
         private static bool IsValidIpAddress(string input)
@@ -164,7 +166,8 @@ namespace AndroidRedirectNotification
             string newIp = this.ipEditEntry.Text;
             string newPort = this.portEntry.Text;
             string newValueStr = this.historyValueEntry.Text;
-            string newUnit = this.historyUnitPicker.SelectedItem?.ToString() ?? "Days";
+            string newUnit = this.historyUnitPicker.SelectedItem?.ToString() ?? "Hours";
+            bool isSendEnabled = this.sendToServerSwitch.IsToggled;
 
             if (!IsValidIpAddress(newIp) && !IsValidHostName(newIp))
             {
@@ -188,11 +191,13 @@ namespace AndroidRedirectNotification
             ServerPort = u16Port;
             KeepHistoryValue = value;
             KeepHistoryUnit = newUnit;
+            IsSendToServerEnabled = isSendEnabled;
 
             Preferences.Set("server_ip", newIp);
             Preferences.Set("server_port", u16Port);
             Preferences.Set("keep_history_value", value);
             Preferences.Set("keep_history_unit", newUnit);
+            Preferences.Set("send_to_server_enabled", isSendEnabled);
 
             CleanOldNotificationsAndSave();
 
