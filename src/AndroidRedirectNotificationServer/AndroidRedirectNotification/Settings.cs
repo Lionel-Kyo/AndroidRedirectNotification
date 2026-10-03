@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace AndroidRedirectNotification
 {
+
     internal class Settings
     {
         public static readonly string SettingsPath = "./Settings/Settings.json";
@@ -29,7 +32,16 @@ namespace AndroidRedirectNotification
                 return null;
 
             string content = File.ReadAllText(SettingsPath, Encoding.UTF8);
-            return JsonSerializer.Deserialize<Settings>(content);
+            var settings = JsonSerializer.Deserialize(content, AppJsonSerializerContext.Default.Settings);
+
+            if (settings != null)
+            {
+                if (settings.SkipDuplicateMsgMs > 99999)
+                    settings.SkipDuplicateMsgMs = 99999;
+                else if (settings.SkipDuplicateMsgMs < 100)
+                    settings.SkipDuplicateMsgMs = 2000;
+            }
+            return settings;
         }
 
         public static void SaveSettings(Settings settings)
@@ -41,13 +53,14 @@ namespace AndroidRedirectNotification
             if (!Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
 
-            var jsonSerializerOptions = new JsonSerializerOptions
+
+            var options = new JsonSerializerOptions(AppJsonSerializerContext.Default.Options)
             {
-                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
                 WriteIndented = true
             };
 
-            string content = JsonSerializer.Serialize(settings, jsonSerializerOptions);
+            string content = JsonSerializer.Serialize(settings, options);
             File.WriteAllText(SettingsPath, content, Encoding.UTF8);
         }
     }

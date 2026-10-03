@@ -1,0 +1,23 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="AndroidRedirectNotification.ExceptionRecordViewerWindow"
+		x:CompileBindings="False"
+        Title="Exception Record Viewer"
+        Width="800" Height="450"
+        WindowStartupLocation="CenterOwner"
+        KeyDown="ExceptionRecordViewer_KeyDown">
+    <Grid>
+		<DataGrid x:Name="dgv"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+				  CanUserResizeColumns="True"
+                  GridLinesVisibility="All"
+				  ScrollViewer.HorizontalScrollBarVisibility="Auto">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Date Time" Binding="{Binding DateTime}" Width="180" />
+                <DataGridTextColumn Header="Exception Type" Binding="{Binding Name}" Width="200" />
+                <DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="*" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</Window>

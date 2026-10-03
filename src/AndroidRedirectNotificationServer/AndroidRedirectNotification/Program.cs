@@ -1,8 +1,14 @@
+using Avalonia;
+using Avalonia.Markup.Xaml;
+using System;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace AndroidRedirectNotification
 {
+
     internal static class Program
     {
         public static readonly Stopwatch ApplicationTime = Stopwatch.StartNew();
@@ -10,17 +16,19 @@ namespace AndroidRedirectNotification
         ///  The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        public static void Main(string[] args)
         {
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             AppDomain.CurrentDomain.FirstChanceException += CurrentDomain_FirstChanceException;
-            Application.ThreadException += Application_ThreadException;
-            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-            // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
-            ApplicationConfiguration.Initialize();
-            Application.Run(new Main());
+            TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
+
+            BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
+
+        public static AppBuilder BuildAvaloniaApp()
+            => AppBuilder.Configure<App>()
+                .UsePlatformDetect()
+                .LogToTrace();
 
         private static void CurrentDomain_FirstChanceException(object? sender, System.Runtime.ExceptionServices.FirstChanceExceptionEventArgs e)
         {
@@ -37,7 +45,7 @@ namespace AndroidRedirectNotification
             }
         }
 
-        private static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
+        private static void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
         {
             File.WriteAllText("./Error.log", $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} | {e.Exception}\n", Encoding.UTF8);
             ExceptionRecord.AddExceptionRecord(e.Exception);

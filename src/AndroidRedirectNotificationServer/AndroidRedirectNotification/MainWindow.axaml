@@ -1,0 +1,59 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="AndroidRedirectNotification.MainWindow"
+        x:CompileBindings="False"
+        Title="Android Redirect Notification Server"
+        Width="1500" Height="500">
+
+	<DockPanel>
+		<!-- MENU -->
+		<Menu DockPanel.Dock="Top">
+			<MenuItem Header="Settings">
+				<MenuItem Header="General" Click="Menu_Settings_General_Click" />
+			</MenuItem>
+			<MenuItem Header="Other">
+				<MenuItem Header="Exception History" Click="ExceptionHistory_Click" />
+			</MenuItem>
+		</Menu>
+
+		<!-- CONTENT -->
+		<Grid RowDefinitions="Auto,*" Margin="4">
+			<TextBlock Grid.Row="0"
+                       Text="Received Messages:"
+                       FontSize="14"
+                       Margin="4,4,4,6" />
+
+			<DataGrid Grid.Row="1"
+                      x:Name="dgv"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserResizeColumns="True"
+                      GridLinesVisibility="All"
+                      ScrollViewer.HorizontalScrollBarVisibility="Auto">
+
+				<DataGrid.ContextMenu>
+					<ContextMenu>
+						<MenuItem Header="Show Message" Click="Menu_ShowMessage_Click" />
+						<Separator />
+						<MenuItem Header="Select All" Click="RecvMsgMenu_SelectAll_Click" />
+						<MenuItem Header="Clear All" Click="RecvMsgMenu_ClearAll_Click" />
+					</ContextMenu>
+				</DataGrid.ContextMenu>
+
+				<DataGrid.Columns>
+					<DataGridTextColumn Header="DateTime (Id)" Binding="{Binding DateTimeId}" Width="120" />
+					<DataGridTextColumn Header="Tag" Binding="{Binding Tag}" Width="100" />
+					<DataGridTextColumn Header="Package Name" Binding="{Binding PackageName}" Width="180" />
+					<DataGridTextColumn Header="App Name" Binding="{Binding AppName}" Width="150" />
+					<DataGridTextColumn Header="Title" Binding="{Binding Title}" Width="180" />
+					<DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="120" />
+					<DataGridTextColumn Header="Importance" Binding="{Binding Importance}" Width="100" />
+					<DataGridTextColumn Header="Action Titles" Binding="{Binding ActionTitles}" Width="180" />
+					<DataGridTextColumn Header="Flags" Binding="{Binding Flags}" Width="100" />
+					<DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="*" MinWidth="150" />
+				</DataGrid.Columns>
+
+			</DataGrid>
+		</Grid>
+	</DockPanel>
+</Window>

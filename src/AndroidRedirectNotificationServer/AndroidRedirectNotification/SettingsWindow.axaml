@@ -1,0 +1,23 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="AndroidRedirectNotification.SettingsWindow"
+        Title="Settings" SizeToContent="WidthAndHeight"
+        WindowStartupLocation="CenterOwner" KeyDown="SettingsWindow_KeyDown">
+    <StackPanel Margin="20" Spacing="12">
+        <StackPanel Orientation="Horizontal" Spacing="10">
+            <TextBlock Text="Port:" VerticalAlignment="Center" Width="160" />
+            <NumericUpDown Name="portNum" Minimum="1" Maximum="65535" Width="160" />
+        </StackPanel>
+
+        <CheckBox Name="skipDuplicateMsgCheck" Content="Skip Duplicate Messages" />
+
+        <StackPanel Orientation="Horizontal" Spacing="10">
+            <TextBlock Text="Duplicate Interval (ms):" VerticalAlignment="Center" Width="160" />
+            <NumericUpDown Name="skipDuplicateMsgNum" Minimum="100" Maximum="99999" Width="160" />
+        </StackPanel>
+
+        <CheckBox Name="showWindowsNotificationCheck" Content="Show Windows Notifications" />
+
+        <Button Name="applyBtn" Content="Apply" HorizontalAlignment="Right" Width="90" Click="ApplyBtn_Click" />
+    </StackPanel>
+</Window>

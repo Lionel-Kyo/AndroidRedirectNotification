@@ -97,7 +97,7 @@ namespace AndroidRedirectNotification
                         buffer = await stream.ReadAsync();
                         byte[] utf8Message = AES.MessageByteCryption.Decrypt(buffer, aesKey);
                         string message = Encoding.UTF8.GetString(utf8Message);
-                        var data = JsonSerializer.Deserialize<MyNotificationData>(message);
+                        var data = JsonSerializer.Deserialize(message, AppJsonSerializerContext.Default.MyNotificationData);
                         if (data != null && OnMessageReceived != null)
                             OnMessageReceived(data);
                     }
