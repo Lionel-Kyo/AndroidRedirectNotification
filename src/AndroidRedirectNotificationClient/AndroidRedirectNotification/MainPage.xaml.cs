@@ -13,6 +13,10 @@ namespace AndroidRedirectNotification
         public static double KeepHistoryValue { get; private set; } = 24;
         public static string KeepHistoryUnit { get; private set; } = "Hours";
         public static bool IsSendToServerEnabled { get; private set; } = true;
+        public static bool SkipDuplicateMessages { get; private set; } = true;
+        public static double DuplicateIntervalSeconds { get; private set; } = 2.0;
+        public static bool MatchContentOnly { get; private set; } = false;
+        public static DuplicateNotificationTracker DuplicateTracker { get; } = new();
 
         public Entry IpEditEntry => ipEditEntry;
         public Entry PortEditEntry => portEntry;
@@ -33,12 +37,18 @@ namespace AndroidRedirectNotification
             KeepHistoryValue = Preferences.Get("keep_history_value", 24.0);
             KeepHistoryUnit = Preferences.Get("keep_history_unit", "Hours");
             IsSendToServerEnabled = Preferences.Get("send_to_server_enabled", true);
+            SkipDuplicateMessages = Preferences.Get("skip_duplicate_messages", true);
+            DuplicateIntervalSeconds = Preferences.Get("duplicate_interval_seconds", 2.0);
+            MatchContentOnly = Preferences.Get("match_content_only", false);
 
             this.ipEditEntry.Text = ServerIp;
             this.portEntry.Text = ServerPort.ToString();
             this.historyValueEntry.Text = KeepHistoryValue.ToString();
             this.historyUnitPicker.SelectedItem = KeepHistoryUnit;
             this.sendToServerSwitch.IsToggled = IsSendToServerEnabled;
+            this.skipDuplicateSwitch.IsToggled = SkipDuplicateMessages;
+            this.duplicateIntervalEntry.Text = DuplicateIntervalSeconds.ToString();
+            this.matchContentOnlySwitch.IsToggled = MatchContentOnly;
 
             LoadAndCleanHistory();
         }
@@ -168,6 +178,9 @@ namespace AndroidRedirectNotification
             string newValueStr = this.historyValueEntry.Text;
             string newUnit = this.historyUnitPicker.SelectedItem?.ToString() ?? "Hours";
             bool isSendEnabled = this.sendToServerSwitch.IsToggled;
+            bool isSkipDuplicate = this.skipDuplicateSwitch.IsToggled;
+            string newDupIntervalStr = this.duplicateIntervalEntry.Text;
+            bool isMatchContentOnly = this.matchContentOnlySwitch.IsToggled;
 
             if (!IsValidIpAddress(newIp) && !IsValidHostName(newIp))
             {
@@ -187,17 +200,29 @@ namespace AndroidRedirectNotification
                 return;
             }
 
+            if (!double.TryParse(newDupIntervalStr, out double dupInterval) || dupInterval < 0.1 || dupInterval > 3600)
+            {
+                await DisplayAlert("Server Configuration", "Invalid Duplicate Interval (must be between 0.1 and 3600 seconds).", "OK");
+                return;
+            }
+
             ServerIp = newIp;
             ServerPort = u16Port;
             KeepHistoryValue = value;
             KeepHistoryUnit = newUnit;
             IsSendToServerEnabled = isSendEnabled;
+            SkipDuplicateMessages = isSkipDuplicate;
+            DuplicateIntervalSeconds = dupInterval;
+            MatchContentOnly = isMatchContentOnly;
 
             Preferences.Set("server_ip", newIp);
             Preferences.Set("server_port", u16Port);
             Preferences.Set("keep_history_value", value);
             Preferences.Set("keep_history_unit", newUnit);
             Preferences.Set("send_to_server_enabled", isSendEnabled);
+            Preferences.Set("skip_duplicate_messages", isSkipDuplicate);
+            Preferences.Set("duplicate_interval_seconds", dupInterval);
+            Preferences.Set("match_content_only", isMatchContentOnly);
 
             CleanOldNotificationsAndSave();
 

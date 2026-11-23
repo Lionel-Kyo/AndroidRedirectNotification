@@ -1,10 +1,10 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
-using Microsoft.Toolkit.Uwp.Notifications;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Security;
 using System.Threading.Tasks;
 
 namespace AndroidRedirectNotification
@@ -13,7 +13,6 @@ namespace AndroidRedirectNotification
     {
         private Settings settings = null!;
         private MyTcpListener? myTcpListener;
-        private DuplicatedNotificationTracker duplicatedNotificationTracker = null!;
         public ObservableCollection<NotificationRowItem> Notifications { get; } = new();
 
         public MainWindow()
@@ -32,10 +31,6 @@ namespace AndroidRedirectNotification
                 ExceptionRecord.AddExceptionRecord(ex);
                 settings = new Settings();
             }
-
-            duplicatedNotificationTracker = new DuplicatedNotificationTracker(
-                TimeSpan.FromMilliseconds(settings.SkipDuplicateMsgMs),
-                120000);
 
             _ = RestartTcpListenerAsync();
         }
@@ -65,39 +60,34 @@ namespace AndroidRedirectNotification
             try
             {
                 string appName = string.IsNullOrEmpty(data.AppName) ? data.PackageName : data.AppName;
-                bool isDuplicated = duplicatedNotificationTracker.IsDuplicate(data);
-                bool addNewMessage = !settings.SkipDuplicateMsg || !isDuplicated;
 
-                if (addNewMessage)
+                Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    Dispatcher.UIThread.InvokeAsync(() =>
+                    try
                     {
-                        try
+                        Notifications.Add(new NotificationRowItem
                         {
-                            Notifications.Add(new NotificationRowItem
-                            {
-                                DateTimeId = $"{data.GetDateTime(): yyyy-MM-dd HH:mm:ss} ({data.Id})",
-                                Tag = data.Tag,
-                                PackageName = data.PackageName,
-                                AppName = data.AppName,
-                                Title = data.Title,
-                                Message = data.Message,
-                                Category = data.Category.ToString(),
-                                Importance = data.Importantce.ToString(),
-                                ActionTitles = string.Join(", ", data.ActionTitles),
-                                Flags = string.Join(", ", data.Flags),
-                                Data = data
-                            });
-                        }
-                        catch (Exception ex) { ExceptionRecord.AddExceptionRecord(ex); }
-                    });
-
-                    if (settings.ShowWindowsNotification &&
-                        data.Category != NotificationCategory.CategoryTransport &&
-                        !data.Flags.Contains("OngoingEvent"))
-                    {
-                        ShowWindowsNotification($"({appName}) {data.Title}", data.Message);
+                            DateTimeId = $"{data.GetDateTime(): yyyy-MM-dd HH:mm:ss} ({data.Id})",
+                            Tag = data.Tag,
+                            PackageName = data.PackageName,
+                            AppName = data.AppName,
+                            Title = data.Title,
+                            Message = data.Message,
+                            Category = data.Category.ToString(),
+                            Importance = data.Importantce.ToString(),
+                            ActionTitles = string.Join(", ", data.ActionTitles),
+                            Flags = string.Join(", ", data.Flags),
+                            Data = data
+                        });
                     }
+                    catch (Exception ex) { ExceptionRecord.AddExceptionRecord(ex); }
+                });
+
+                if (settings.ShowWindowsNotification &&
+                    data.Category != NotificationCategory.CategoryTransport &&
+                    !data.Flags.Contains("OngoingEvent"))
+                {
+                    ShowWindowsNotification($"({appName}) {data.Title}", data.Message);
                 }
             }
             catch (Exception ex) { ExceptionRecord.AddExceptionRecord(ex); }
@@ -105,17 +95,35 @@ namespace AndroidRedirectNotification
 
         public void ShowWindowsNotification(string title, string message)
         {
-            Dispatcher.UIThread.InvokeAsync(() =>
+            try
             {
-                try
+                string safeTitle = SecurityElement.Escape(title) ?? string.Empty;
+                string safeMessage = SecurityElement.Escape(message) ?? string.Empty;
+
+                string xml = $@"<toast>
+    <visual>
+        <binding template=""ToastGeneric"">
+            <text>{safeTitle}</text>
+            <text>{safeMessage}</text>
+        </binding>
+    </visual>
+</toast>";
+
+                var xmlDoc = new Windows.Data.Xml.Dom.XmlDocument();
+                xmlDoc.LoadXml(xml);
+                var toast = new Windows.UI.Notifications.ToastNotification(xmlDoc);
+
+                toast.Failed += (s, e) =>
                 {
-                    new ToastContentBuilder()
-                        .AddText(title)
-                        .AddText(message)
-                        .Show();
-                }
-                catch (Exception ex) { ExceptionRecord.AddExceptionRecord(ex); }
-            });
+                    ExceptionRecord.AddExceptionRecord(new Exception($"Toast failed to display: 0x{e.ErrorCode:X8}"));
+                };
+
+                Windows.UI.Notifications.ToastNotificationManager.CreateToastNotifier(ToastHelper.AppId).Show(toast);
+            }
+            catch (Exception ex)
+            {
+                ExceptionRecord.AddExceptionRecord(ex);
+            }
         }
 
         private void RecvMsgMenu_SelectAll_Click(object? sender, RoutedEventArgs e)
@@ -139,7 +147,6 @@ namespace AndroidRedirectNotification
             Settings oldSettings = settings;
             settings = newSettings;
 
-            duplicatedNotificationTracker.Window = TimeSpan.FromMilliseconds(newSettings.SkipDuplicateMsgMs);
             if (oldSettings.Port != newSettings.Port)
             {
                 _ = RestartTcpListenerAsync();

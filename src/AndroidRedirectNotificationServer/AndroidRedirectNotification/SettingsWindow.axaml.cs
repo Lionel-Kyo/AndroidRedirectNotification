@@ -15,8 +15,6 @@ namespace AndroidRedirectNotification
         public SettingsWindow(Settings settings) : this()
         {
             portNum.Value = settings.Port;
-            skipDuplicateMsgCheck.IsChecked = settings.SkipDuplicateMsg;
-            skipDuplicateMsgNum.Value = settings.SkipDuplicateMsgMs;
             showWindowsNotificationCheck.IsChecked = settings.ShowWindowsNotification;
         }
 
@@ -25,8 +23,6 @@ namespace AndroidRedirectNotification
             var newSettings = new Settings
             {
                 Port = (ushort)(portNum.Value ?? 8080),
-                SkipDuplicateMsg = skipDuplicateMsgCheck.IsChecked ?? false,
-                SkipDuplicateMsgMs = (int)(skipDuplicateMsgNum.Value ?? 2000),
                 ShowWindowsNotification = showWindowsNotificationCheck.IsChecked ?? false
             };
 
@@ -36,7 +32,7 @@ namespace AndroidRedirectNotification
             }
             catch (Exception ex)
             {
-                // Handle error
+                ExceptionRecord.AddExceptionRecord(ex);
                 return;
             }
 

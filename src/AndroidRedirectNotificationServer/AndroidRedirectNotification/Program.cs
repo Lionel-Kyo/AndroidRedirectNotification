@@ -8,16 +8,19 @@ using System.Threading.Tasks;
 
 namespace AndroidRedirectNotification
 {
-
     internal static class Program
     {
         public static readonly Stopwatch ApplicationTime = Stopwatch.StartNew();
+
         /// <summary>
         ///  The main entry point for the application.
         /// </summary>
         [STAThread]
         public static void Main(string[] args)
         {
+            NativeLibraryHelper.Initialize();
+            ToastHelper.Initialize();
+
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             AppDomain.CurrentDomain.FirstChanceException += CurrentDomain_FirstChanceException;
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
@@ -32,23 +35,35 @@ namespace AndroidRedirectNotification
 
         private static void CurrentDomain_FirstChanceException(object? sender, System.Runtime.ExceptionServices.FirstChanceExceptionEventArgs e)
         {
-            File.AppendAllText("FirstChance.log", $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} | {e.Exception}\n", Encoding.UTF8);
-            ExceptionRecord.AddExceptionRecord(e.Exception);
+            try
+            {
+                File.AppendAllText("FirstChance.log", $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} | {e.Exception}\n", Encoding.UTF8);
+                ExceptionRecord.AddExceptionRecord(e.Exception);
+            }
+            catch { }
         }
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             if (e.ExceptionObject is Exception ex)
             {
-                File.WriteAllText("./Error.log", $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} | {ex}\n", Encoding.UTF8);
-                ExceptionRecord.AddExceptionRecord(ex);
+                try
+                {
+                    File.WriteAllText("./Error.log", $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} | {ex}\n", Encoding.UTF8);
+                    ExceptionRecord.AddExceptionRecord(ex);
+                }
+                catch { }
             }
         }
 
         private static void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
         {
-            File.WriteAllText("./Error.log", $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} | {e.Exception}\n", Encoding.UTF8);
-            ExceptionRecord.AddExceptionRecord(e.Exception);
+            try
+            {
+                File.WriteAllText("./Error.log", $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} | {e.Exception}\n", Encoding.UTF8);
+                ExceptionRecord.AddExceptionRecord(e.Exception);
+            }
+            catch { }
         }
     }
 }

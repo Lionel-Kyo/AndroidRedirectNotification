@@ -36,7 +36,7 @@
                                FontAttributes="Bold" 
                                TextColor="#D0BCFF" />
 
-                        <Grid RowDefinitions="Auto, Auto, Auto, Auto" 
+                        <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto" 
                               ColumnDefinitions="*, *" 
                               RowSpacing="12" 
                               ColumnSpacing="12">
@@ -107,7 +107,45 @@
                                         VerticalOptions="Center" />
                             </Grid>
 
-                            <Button Grid.Row="3" Grid.ColumnSpan="2"
+                            <!-- Skip Duplicate Messages Toggle Switch -->
+                            <Grid Grid.Row="3" Grid.ColumnSpan="2" ColumnDefinitions="*, Auto" VerticalOptions="Center">
+                                <VerticalStackLayout VerticalOptions="Center">
+                                    <Label Text="Skip Duplicate Messages" FontSize="14" FontAttributes="Bold" TextColor="#E6E1E5" />
+                                    <Label Text="Ignore duplicate notifications within the interval" FontSize="11" TextColor="#808090" />
+                                </VerticalStackLayout>
+                                <Switch x:Name="skipDuplicateSwitch"
+                                        Grid.Column="1"
+                                        OnColor="#9A72EC"
+                                        ThumbColor="#E6E1E5"
+                                        VerticalOptions="Center" />
+                            </Grid>
+
+                            <!-- Duplicate Interval Entry -->
+                            <VerticalStackLayout Grid.Row="4" Grid.ColumnSpan="2" Spacing="6">
+                                <Label Text="Duplicate Interval (Seconds)" FontSize="12" TextColor="#A0A0B0" />
+                                <Entry x:Name="duplicateIntervalEntry"
+                                       Text="2"
+                                       Keyboard="Numeric"
+                                       TextColor="#E6E1E5"
+                                       BackgroundColor="#2B2938"
+                                       FontSize="14"
+                                       HeightRequest="44" />
+                            </VerticalStackLayout>
+
+                            <!-- Match Content Only Switch -->
+                            <Grid Grid.Row="5" Grid.ColumnSpan="2" ColumnDefinitions="*, Auto" VerticalOptions="Center">
+                                <VerticalStackLayout VerticalOptions="Center">
+                                    <Label Text="Match Content Only" FontSize="14" FontAttributes="Bold" TextColor="#E6E1E5" />
+                                    <Label Text="Compare title and message (ignores notification ID)" FontSize="11" TextColor="#808090" />
+                                </VerticalStackLayout>
+                                <Switch x:Name="matchContentOnlySwitch"
+                                        Grid.Column="1"
+                                        OnColor="#9A72EC"
+                                        ThumbColor="#E6E1E5"
+                                        VerticalOptions="Center" />
+                            </Grid>
+
+                            <Button Grid.Row="6" Grid.ColumnSpan="2"
                                     x:Name="editBtn"
                                     Text="Apply Configuration"
                                     Clicked="OnEditBtnClicked"

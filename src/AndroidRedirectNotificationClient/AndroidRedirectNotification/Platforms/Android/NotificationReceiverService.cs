@@ -46,6 +46,21 @@ public class NotificationReceiverService : NotificationListenerService
         if (string.IsNullOrEmpty(title) || string.IsNullOrEmpty(message))
             return;
 
+        if (MainPage.SkipDuplicateMessages)
+        {
+            if (MainPage.DuplicateTracker.IsDuplicate(
+                packageName,
+                title,
+                message,
+                id,
+                tag,
+                MainPage.DuplicateIntervalSeconds,
+                MainPage.MatchContentOnly))
+            {
+                return;
+            }
+        }
+
         string pictureBase64 = "";
         string pictureIconBase64 = "";
 

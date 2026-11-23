@@ -90,7 +90,8 @@ namespace AndroidRedirectNotification
                                     new Dictionary<string, int>()
                                     {
                                         { "Status", 1 }
-                                    }
+                                    },
+                                    AppJsonSerializerContext.Default.DictionaryStringInt32
                                 )
                             ), aesKey)
                         );

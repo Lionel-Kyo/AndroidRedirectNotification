@@ -1,8 +1,9 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:AndroidRedirectNotification"
         x:Class="AndroidRedirectNotification.MainWindow"
-        x:CompileBindings="False"
         Title="Android Redirect Notification Server"
+        Icon="/Assets/appicon.ico"
         Width="1500" Height="500">
 
 	<DockPanel>
@@ -25,6 +26,7 @@
 
 			<DataGrid Grid.Row="1"
                       x:Name="dgv"
+                      x:DataType="local:NotificationRowItem"
                       AutoGenerateColumns="False"
                       IsReadOnly="True"
                       CanUserResizeColumns="True"

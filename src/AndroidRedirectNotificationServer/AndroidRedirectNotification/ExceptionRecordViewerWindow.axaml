@@ -1,13 +1,14 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:AndroidRedirectNotification"
         x:Class="AndroidRedirectNotification.ExceptionRecordViewerWindow"
-		x:CompileBindings="False"
         Title="Exception Record Viewer"
         Width="800" Height="450"
         WindowStartupLocation="CenterOwner"
         KeyDown="ExceptionRecordViewer_KeyDown">
     <Grid>
 		<DataGrid x:Name="dgv"
+                  x:DataType="local:ExceptionRecordRowItem"
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
 				  CanUserResizeColumns="True"
