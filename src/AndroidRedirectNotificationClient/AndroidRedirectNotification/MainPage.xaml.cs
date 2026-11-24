@@ -8,9 +8,9 @@ namespace AndroidRedirectNotification
     public partial class MainPage : ContentPage
     {
         public static MainPage? Instance { get; private set; }
-        public static string ServerIp { get; private set; } = "192.168.1.1";
-        public static ushort ServerPort { get; private set; } = 443;
-        public static double KeepHistoryValue { get; private set; } = 24;
+        public static string ServerIp { get; private set; } = "192.168.1.100";
+        public static ushort ServerPort { get; private set; } = 5000;
+        public static double KeepHistoryValue { get; private set; } = 12;
         public static string KeepHistoryUnit { get; private set; } = "Hours";
         public static bool IsSendToServerEnabled { get; private set; } = true;
         public static bool SkipDuplicateMessages { get; private set; } = true;
@@ -32,9 +32,9 @@ namespace AndroidRedirectNotification
 
             historyCollectionView.ItemsSource = Notifications;
 
-            ServerIp = Preferences.Get("server_ip", "192.168.1.1");
-            ServerPort = (ushort)Preferences.Get("server_port", 443);
-            KeepHistoryValue = Preferences.Get("keep_history_value", 24.0);
+            ServerIp = Preferences.Get("server_ip", "192.168.1.100");
+            ServerPort = (ushort)Preferences.Get("server_port", 5000);
+            KeepHistoryValue = Preferences.Get("keep_history_value", 12.0);
             KeepHistoryUnit = Preferences.Get("keep_history_unit", "Hours");
             IsSendToServerEnabled = Preferences.Get("send_to_server_enabled", true);
             SkipDuplicateMessages = Preferences.Get("skip_duplicate_messages", true);

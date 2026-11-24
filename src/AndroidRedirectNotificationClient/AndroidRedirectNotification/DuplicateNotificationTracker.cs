@@ -3,97 +3,115 @@ using System.Collections.Generic;
 
 namespace AndroidRedirectNotification
 {
+    public enum NotificationDisposition
+    {
+        New,
+        Updated,
+        Duplicate
+    }
+
     public sealed class DuplicateNotificationTracker
     {
-        private readonly struct NotificationKey : IEquatable<NotificationKey>
-        {
-            public readonly string PackageName;
-            public readonly string Title;
-            public readonly string Message;
-            public readonly int Id;
-            public readonly string Tag;
-            public readonly bool MatchContentOnly;
+        private readonly record struct ContentKey(
+            string PackageName,
+            string Title,
+            string Message,
+            int Id,
+            string Tag);
 
-            public NotificationKey(string packageName, string title, string message, int id, string tag, bool matchContentOnly)
-            {
-                PackageName = packageName ?? string.Empty;
-                Title = title ?? string.Empty;
-                Message = message ?? string.Empty;
-                Id = id;
-                Tag = tag ?? string.Empty;
-                MatchContentOnly = matchContentOnly;
-            }
-
-            public bool Equals(NotificationKey other)
-            {
-                if (MatchContentOnly || other.MatchContentOnly)
-                {
-                    return string.Equals(PackageName, other.PackageName, StringComparison.Ordinal)
-                        && string.Equals(Title, other.Title, StringComparison.Ordinal)
-                        && string.Equals(Message, other.Message, StringComparison.Ordinal);
-                }
-
-                return Id == other.Id
-                    && string.Equals(Tag, other.Tag, StringComparison.Ordinal)
-                    && string.Equals(PackageName, other.PackageName, StringComparison.Ordinal)
-                    && string.Equals(Title, other.Title, StringComparison.Ordinal)
-                    && string.Equals(Message, other.Message, StringComparison.Ordinal);
-            }
-
-            public override bool Equals(object? obj) => obj is NotificationKey other && Equals(other);
-
-            public override int GetHashCode()
-            {
-                var hash = new HashCode();
-                hash.Add(PackageName, StringComparer.Ordinal);
-                hash.Add(Title, StringComparer.Ordinal);
-                hash.Add(Message, StringComparer.Ordinal);
-
-                if (!MatchContentOnly)
-                {
-                    hash.Add(Id);
-                    hash.Add(Tag, StringComparer.Ordinal);
-                }
-
-                return hash.ToHashCode();
-            }
-        }
+        private readonly record struct ActiveSlotState(
+            string Title,
+            string Message,
+            long LastUpdatedTick);
 
         private readonly object _lock = new();
-        private readonly Dictionary<NotificationKey, long> _lastSeenTicks = new();
-        private readonly List<NotificationKey> _purgeBuffer = new();
+        private readonly Dictionary<ContentKey, long> _recentDuplicateTicks = new();
+        private readonly Dictionary<string, ActiveSlotState> _activeSlots = new(StringComparer.Ordinal);
+        private readonly List<ContentKey> _purgeBuffer = new();
         private long _lastPurgeTick = Environment.TickCount64;
 
-        /// <summary>
-        /// Checks whether the notification is a duplicate within the given window.
-        /// </summary>
-        public bool IsDuplicate(string packageName, string title, string message, int id, string tag, double intervalSeconds, bool matchContentOnly)
+        public NotificationDisposition Evaluate(
+            string? sbnKey,
+            string packageName,
+            string title,
+            string message,
+            int id,
+            string tag,
+            double intervalSeconds,
+            bool matchContentOnly,
+            bool extendWindowOnHit = true)
         {
             long now = Environment.TickCount64;
-            long windowMs = (long)Math.Max(100, intervalSeconds * 1000.0);
-            var key = new NotificationKey(packageName, title, message, id, tag, matchContentOnly);
+            long windowMs = Math.Max(0, (long)(intervalSeconds * 1000.0));
+
+            string safePkg = packageName ?? string.Empty;
+            string safeTitle = title ?? string.Empty;
+            string safeMessage = message ?? string.Empty;
+            string safeTag = tag ?? string.Empty;
+            string slotKey = GetSlotKey(sbnKey, safePkg, safeTag, id);
+
+            var dupKey = matchContentOnly
+                ? new ContentKey(safePkg, safeTitle, safeMessage, 0, string.Empty)
+                : new ContentKey(safePkg, safeTitle, safeMessage, id, safeTag);
 
             lock (_lock)
             {
-                // Periodically purge stale entries to prevent memory growth
-                if (_lastSeenTicks.Count > 30 && (now - _lastPurgeTick > windowMs * 2))
+                long purgeInterval = Math.Max(5_000, windowMs * 2);
+                if (_recentDuplicateTicks.Count > 30 && (now - _lastPurgeTick > purgeInterval))
                 {
-                    PurgeStale(now, windowMs * 2);
+                    PurgeStale(now, purgeInterval);
                     _lastPurgeTick = now;
                 }
 
-                if (_lastSeenTicks.TryGetValue(key, out long lastSeen))
+                // 1. Suppress rapid identical re-posts within the debounce window
+                if (windowMs > 0 &&
+                    _recentDuplicateTicks.TryGetValue(dupKey, out long lastSeen) &&
+                    now - lastSeen <= windowMs)
                 {
-                    if (now - lastSeen <= windowMs)
+                    if (extendWindowOnHit)
                     {
-                        // Reset timestamp on rapid bursts (debounce suppression)
-                        _lastSeenTicks[key] = now;
-                        return true;
+                        _recentDuplicateTicks[dupKey] = now;
                     }
+                    return NotificationDisposition.Duplicate;
                 }
 
-                _lastSeenTicks[key] = now;
-                return false;
+                _recentDuplicateTicks[dupKey] = now;
+
+                // 2. Check if this Android notification slot is already active
+                if (_activeSlots.TryGetValue(slotKey, out var existingSlot))
+                {
+                    bool contentChanged =
+                        !string.Equals(existingSlot.Title, safeTitle, StringComparison.Ordinal) ||
+                        !string.Equals(existingSlot.Message, safeMessage, StringComparison.Ordinal);
+
+                    _activeSlots[slotKey] = new ActiveSlotState(safeTitle, safeMessage, now);
+
+                    // Same active slot: if text changed, mark as Updated; if identical outside window, still an update
+                    return contentChanged
+                        ? NotificationDisposition.Updated
+                        : NotificationDisposition.Updated;
+                }
+
+                _activeSlots[slotKey] = new ActiveSlotState(safeTitle, safeMessage, now);
+                return NotificationDisposition.New;
+            }
+        }
+
+        private static string GetSlotKey(string? sbnKey, string packageName, string tag, int id)
+        {
+            if (!string.IsNullOrEmpty(sbnKey))
+                return sbnKey;
+
+            return $"{packageName ?? ""}\u001f{tag ?? ""}\u001f{id}";
+        }
+
+        public void MarkRemoved(string? sbnKey, string packageName, string tag, int id)
+        {
+            string slotKey = GetSlotKey(sbnKey, packageName, tag, id);
+
+            lock (_lock)
+            {
+                _activeSlots.Remove(slotKey);
             }
         }
 
@@ -101,7 +119,8 @@ namespace AndroidRedirectNotification
         {
             lock (_lock)
             {
-                _lastSeenTicks.Clear();
+                _recentDuplicateTicks.Clear();
+                _activeSlots.Clear();
             }
         }
 
@@ -109,7 +128,7 @@ namespace AndroidRedirectNotification
         {
             _purgeBuffer.Clear();
 
-            foreach (var kvp in _lastSeenTicks)
+            foreach (var kvp in _recentDuplicateTicks)
             {
                 if (now - kvp.Value > expirationMs)
                 {
@@ -119,7 +138,7 @@ namespace AndroidRedirectNotification
 
             for (int i = 0; i < _purgeBuffer.Count; i++)
             {
-                _lastSeenTicks.Remove(_purgeBuffer[i]);
+                _recentDuplicateTicks.Remove(_purgeBuffer[i]);
             }
 
             _purgeBuffer.Clear();

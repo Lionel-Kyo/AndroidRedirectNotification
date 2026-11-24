@@ -10,6 +10,7 @@ namespace AndroidRedirectNotification.Platforms.Android
     internal class MyNotificationData
     {
         public long TimeStamp { get; set; }
+        public string SbnKey { get; set; }
         public int Id { get; set; }
         public string Tag { get; set; }
         public string PackageName { get; set; }
@@ -31,10 +32,13 @@ namespace AndroidRedirectNotification.Platforms.Android
         /// ShowLights, OngoingEvent, Insistent, OnlyAlertOnce, AutoCancel, NoClear, ForegroundService, HighPriority, LocalOnly, GroupSummary, Bubble
         /// </summary>
         public List<string> Flags { get; set; }
+        public bool IsUpdate { get; set; }
+        public bool IsRemoved { get; set; }
 
         public MyNotificationData()
         {
             TimeStamp = 0;
+            SbnKey = "";
             Id = 0;
             Tag = "";
             PackageName = "";
@@ -47,6 +51,8 @@ namespace AndroidRedirectNotification.Platforms.Android
             ActionTitles = new List<string>();
             Flags = new List<string>();
             Importantce = 0;
+            IsUpdate = false;
+            IsRemoved = false;
         }
 
         public DateTime GetDateTime()
@@ -54,43 +60,12 @@ namespace AndroidRedirectNotification.Platforms.Android
             return DateTimeOffset.FromUnixTimeSeconds(TimeStamp).ToLocalTime().DateTime;
         }
 
-        public bool Equals(MyNotificationData? obj)
+        public string GetSlotKey()
         {
-            if (obj == null)
-                return false;
+            if (!string.IsNullOrWhiteSpace(SbnKey))
+                return SbnKey;
 
-            return this.Id == obj.Id && this.Tag == obj.Tag &&
-                this.PackageName == obj.PackageName && this.AppName == obj.AppName &&
-                this.Title == obj.Title && this.Message == obj.Message &&
-                this.Category == obj.Category && this.Importantce == obj.Importantce &&
-                this.ActionTitles.SequenceEqual(obj.ActionTitles) && this.Flags.SequenceEqual(obj.Flags);
-        }
-
-        public override bool Equals(object? obj)
-        {
-            if (obj == null)
-                return false;
-
-            if (obj is MyNotificationData)
-                return Equals((MyNotificationData)obj);
-
-            return false;
-        }
-
-        public override int GetHashCode()
-        {
-            HashCode hash = new HashCode();
-            hash.Add(Id);
-            hash.Add(Tag);
-            hash.Add(PackageName);
-            hash.Add(AppName);
-            hash.Add(Title);
-            hash.Add(Message);
-            hash.Add(Category);
-            hash.Add(Importantce);
-            hash.Add(ActionTitles);
-            hash.Add(Flags);
-            return hash.ToHashCode();
+            return $"{PackageName ?? string.Empty}\u001f{Tag ?? string.Empty}\u001f{Id}";
         }
     }
 }

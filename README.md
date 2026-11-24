@@ -4,74 +4,130 @@ An end-to-end encrypted notification forwarding solution that seamlessly mirrors
 
 ---
 
-## Features
+## Key Features
 
-- **End-to-End Encryption**: Every connection establishes an ephemeral RSA-2048 handshake and AES-CBC symmetric encryption, ensuring notification contents, titles, and media attachments remain confidential across local networks and Wi-Fi.
-- **Native Windows Toast Integration**: Native integration with the Windows 10/11 Notification Platform and Action Center for desktop banner alerts.
-- **Native AOT Compiled Server**: The Windows server compiles down to a native machine-code binary (Native AOT) with instant startup, zero JIT overhead, and self-contained Skia/HarfBuzz graphics runtimes.
-- **Client-Side Duplicate Suppression**: High-performance deduplication on the mobile device suppresses repeated or pulsing notifications (e.g. typing indicators, progress bars) before encoding bitmaps or opening network connections—preserving phone battery and reducing network bandwidth.
-- **Attachment & Media Support**: Forwards contact icons, notification picture attachments, action button titles, and notification flags.
-- **Local Notification History**: The client maintains an offline notification log with configurable retention duration (seconds, minutes, hours, days, or permanent).
+- **Next-Gen Authenticated Cryptography**:
+  - **Ed25519** public-key digital signatures: Server authenticates its identity to prevent Man-in-the-Middle (MITM) attacks.
+  - **X25519** Elliptic-Curve Diffie-Hellman (ECDH): Generates ephemeral session keys per transmission for forward secrecy.
+  - **HKDF-SHA256**: Secure key derivation combining ephemeral public keys.
+  - **AES-256-GCM** (AEAD): Authenticated payload encryption guaranteeing confidentiality and data integrity.
+- **Native AOT Compiled Windows Server**:
+  - Compiles to a fully standalone machine-code binary with instant startup and zero JIT overhead.
+  - Self-contained graphics runtimes: Embedded `libSkiaSharp`, `libHarfBuzzSharp`, `libsodium`, and `av_libGLESv2` with automated runtime extraction.
+- **Windows WinRT Toast Notifications**:
+  - Native integration with Windows 10/11 Action Center via WinRT `ToastNotificationManager`.
+  - Automatic AppUserModelID (AUMID) registration.
+  - Configurable toast suppression for notification updates and custom category/flag blocklists.
+- **Smart Notification Lifecycle Tracking**:
+  - Tracks notification status: `New`, `Updated`, and `Removed`.
+  - Notification replacement in table view to keep the active list clean and organized.
+  - Historical snapshot inspector: Review the update timeline, attachment pictures/icons, and raw Android notification metadata for every notification slot.
+- **Client-Side Deduplication Engine**:
+  - Android-side debouncing and active-slot tracking suppress rapid re-posts and progress spam before decoding bitmaps or establishing network sockets.
+  - Configurable debounce interval and content-only matching mode.
+  - Substantially reduces mobile battery drain, CPU usage, and network traffic.
+- **Offline History with Retention Management**:
+  - Local persistent notification store on the mobile client with configurable retention policies (seconds, minutes, hours, days, or unlimited).
 
 ---
 
 ## Architecture & Technology Stack
 
-### Windows Server
-* **Framework**: .NET 9 (`net9.0-windows10.0.17763.0`)
-* **UI**: [Avalonia UI](https://avaloniaui.net/) (Fluent Dark Theme, DataGrid, Compiled Bindings)
-* **Compilation**: Native AOT (`PublishAot=true`) for standalone native execution
-* **Notifications**: Windows WinRT `ToastNotificationManager` with explicit AppUserModelID registration
-* **Serialization**: System.Text.Json compile-time source generation (`JsonSerializerContext`)
-* **Cryptography**: RSA-2048 + AES-256-CBC
+### 🖥️ Windows Server
+* **Target Framework**: .NET 9 (`net9.0-windows10.0.17763.0`)
+* **UI Engine**: [Avalonia UI 12.2](https://avaloniaui.net/) (Fluent Dark Theme, DataGrid, Compiled Bindings)
+* **Compilation**: Native AOT (`PublishAot=true`) or Self-Contained Release
+* **Cryptography**: [NSec.Cryptography](https://nsec.ca/) (libsodium) — Ed25519, X25519, HKDF-SHA256, AES-256-GCM
+* **Serialization**: System.Text.Json source generation (`JsonSerializerContext`)
+* **Notifications**: Windows WinRT `ToastNotificationManager`
 
-### Android Client
-* **Framework**: .NET 8 MAUI (`net8.0-android`)
-* **System Service**: Android `NotificationListenerService`
-* **Deduplication Engine**: Monotonic tick-based debounce tracker with configurable window and content-only matching mode
-* **Storage**: Local persistent JSON storage with automated cleanup based on retention rules
+### 📱 Android Client
+* **Target Framework**: .NET 9 MAUI (`net9.0-android`)
+* **System Service**: Android `NotificationListenerService` (`OnNotificationPosted` & `OnNotificationRemoved`)
+* **Cryptography**: NSec.Cryptography with pinned server Ed25519 public key (`server_ed25519.pub`)
+* **Deduplication**: Monotonic tick-based `DuplicateNotificationTracker` evaluating active notification slot state and content hashes
+* **Storage**: Local JSON history with automated rolling cleanup
+
+---
+
+## Cryptography & Key Management
+
+Each transmission follows a cryptographic handshake powered by libsodium:
+
+```
+Android Client                                              Windows Server
+      |                                                           |
+      | <------- [32-byte X25519 PubKey + 64-byte Ed25519 Sig] -- |  (Server sends ephemeral
+      |                                                           |   key signed with its
+      |  (Client verifies signature using server_ed25519.pub)     |   persistent Ed25519 key)
+      |                                                           |
+      | -- [32-byte Client X25519 Ephemeral PubKey] ------------> |
+      |                                                           |
+      +========== [X25519 ECDH + HKDF-SHA256 Key Derivation] =====+  (Both derive mutual
+      |                                                           |   AES-256-GCM session key)
+      | -- [AES-256-GCM Encrypted Notification Payload] --------> |
+      |                                                           |
+```
+
+### Generating Custom Keypairs
+A Python utility is included to generate new Ed25519 keypairs:
+```bash
+python src/generate_ed25519_keys.py
+```
+This writes `server_ed25519.key` (private key, embedded in server) and `server_ed25519.pub` (public key, distributed to client).
 
 ---
 
 ## Configuration & Usage
 
-### 1. Server Setup
+### 1. Server Configuration
 1. Launch `AndroidRedirectNotificationServer.exe`.
-2. Click **Settings -> General** to configure:
-   * **Port**: Default is `443` (or any custom TCP port).
-   * **Show Windows Notifications**: Enable or disable Windows desktop toast banners.
-3. Allow the chosen port through the Windows Firewall if prompted.
+2. Open **Settings -> General**:
+   * **Port**: Default is `5000` (TCP).
+   * **Show Windows Toast**: Toggle desktop toast banners.
+   * **Show Windows Toast on Update**: Enable if you wish to see banners when existing notifications update.
+   * **Blocked Categories**: Multi-select categories to ignore (e.g. `transport` for music players, `sys`, `service`).
+   * **Blocked Flags**: Multi-select notification flags to ignore (e.g. `OngoingEvent`, `ForegroundService`).
+3. Click **Apply**. Allow the port through Windows Firewall if prompted.
 
-### 2. Client Setup
-1. Install and open the Android application.
-2. Grant **Notification Access** permissions when prompted in Android system settings.
-3. In **Server Configuration**, specify:
-   * **IP Address**: The local IP address of your Windows computer (e.g., `192.168.1.100`).
-   * **Port**: Matching the port configured on the server.
-   * **Keep History Duration**: How long past notifications are preserved locally.
-   * **Send to Server**: Toggle real-time forwarding on/off.
-   * **Skip Duplicate Messages**: Enable or disable client-side duplicate suppression.
-   * **Duplicate Interval (Seconds)**: Debounce interval window (default: `2.0` seconds).
-   * **Match Content Only**: Compare title and message content regardless of internal notification ID changes.
-4. Tap **Apply Configuration**.
+### 2. Client Configuration
+1. Open the Android application and grant **Notification Access** permissions when prompted.
+2. Configure connection settings:
+   * **IP Address**: Local IP of your Windows PC (e.g., `192.168.1.100`).
+   * **Port**: Matches server port (`5000`).
+   * **Keep History Duration**: Retention duration for local logs (e.g., `12 Hours`).
+   * **Send to Server**: Toggle network forwarding.
+   * **Skip Duplicate Messages**: Enable client-side deduplication.
+   * **Duplicate Interval (Seconds)**: Debounce suppression window (default: `2.0` seconds).
+   * **Match Content Only**: When enabled, notifications with identical title and message are treated as duplicates regardless of internal notification ID or tag.
+3. Tap **Apply Configuration**.
 
 ---
 
-## Building from Source
+## Building & Publishing
 
-### Prerequisites
-* [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
-* C++ Desktop Development tools (Visual Studio 2022 / Build Tools) for Native AOT linking
-* .NET MAUI Android workload (`dotnet workload install maui-android`)
+### Quick Build Scripts
+The repository includes automated batch scripts for quick builds:
 
-### Build Server (Native AOT)
+- **Build Server (Native AOT)**:
+  Double-click `src/AndroidRedirectNotificationServer/build win64 release Aot.bat`
+- **Build Server (Self-Contained Release)**:
+  Double-click `src/AndroidRedirectNotificationServer/build win64 release.bat`
+- **Build Android APK**:
+  Double-click `src/AndroidRedirectNotificationClient/build apk.bat`
+
+### Manual CLI Commands
+
+#### Build Windows Server (Native AOT)
 ```bash
-dotnet publish src/AndroidRedirectNotificationServer/AndroidRedirectNotification/AndroidRedirectNotification.csproj -c Release -r win-x64
+cd src/AndroidRedirectNotificationServer
+dotnet publish --runtime win-x64 --configuration Release /p:PublishAot=true /p:EnableTrimAnalyzer=false /p:SUPPRESS_NETSDK1175=true
 ```
-The standalone native executable will be located in:
-`src/AndroidRedirectNotificationServer/AndroidRedirectNotification/bin/Release/net9.0-windows10.0.17763.0/win-x64/publish/`
+The standalone binary will be generated at:
+`src/AndroidRedirectNotificationServer/AndroidRedirectNotification/bin/Release/net9.0-windows10.0.17763.0/win-x64/publish/AndroidRedirectNotificationServer.exe`
 
-### Build Android Client
+#### Build Android Client (Release APK)
 ```bash
-dotnet publish src/AndroidRedirectNotificationClient/AndroidRedirectNotification/AndroidRedirectNotification.csproj -f net8.0-android -c Release --no-restore
+cd src/AndroidRedirectNotificationClient
+dotnet publish AndroidRedirectNotification/AndroidRedirectNotification.csproj -f net9.0-android -c Release
 ```

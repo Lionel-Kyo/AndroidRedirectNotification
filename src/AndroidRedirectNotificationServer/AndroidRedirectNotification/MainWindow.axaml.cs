@@ -59,35 +59,42 @@ namespace AndroidRedirectNotification
         {
             try
             {
-                string appName = string.IsNullOrEmpty(data.AppName) ? data.PackageName : data.AppName;
+                NotificationHistoryStore.Record(data);
+
+                string displayName = string.IsNullOrEmpty(data.AppName) ? data.PackageName : data.AppName;
 
                 Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     try
                     {
-                        Notifications.Add(new NotificationRowItem
+                        var row = new NotificationRowItem
                         {
-                            DateTimeId = $"{data.GetDateTime(): yyyy-MM-dd HH:mm:ss} ({data.Id})",
-                            Tag = data.Tag,
-                            PackageName = data.PackageName,
-                            AppName = data.AppName,
+                            TimeId = $"{data.GetDateTime():HH:mm:ss (yyyy-MM-dd)} ({data.Id})",
+                            Name = displayName,
                             Title = data.Title,
                             Message = data.Message,
-                            Category = data.Category.ToString(),
-                            Importance = data.Importantce.ToString(),
-                            ActionTitles = string.Join(", ", data.ActionTitles),
-                            Flags = string.Join(", ", data.Flags),
                             Data = data
-                        });
+                        };
+
+                        //if (data.IsUpdate || data.IsRemoved)
+                        string targetKey = data.GetSlotKey();
+                        var existingRows = Notifications
+                            .Where(x => string.Equals(x.Data.GetSlotKey(), targetKey, StringComparison.Ordinal))
+                            .ToList();
+
+                        foreach (var existing in existingRows)
+                        {
+                            Notifications.Remove(existing);
+                        }
+
+                        Notifications.Insert(0, row);
                     }
                     catch (Exception ex) { ExceptionRecord.AddExceptionRecord(ex); }
                 });
 
-                if (settings.ShowWindowsNotification &&
-                    data.Category != NotificationCategory.CategoryTransport &&
-                    !data.Flags.Contains("OngoingEvent"))
+                if (settings.ShouldShowWindowsToast(data))
                 {
-                    ShowWindowsNotification($"({appName}) {data.Title}", data.Message);
+                    ShowWindowsNotification($"({displayName}) {data.Title}", data.Message);
                 }
             }
             catch (Exception ex) { ExceptionRecord.AddExceptionRecord(ex); }
@@ -134,6 +141,7 @@ namespace AndroidRedirectNotification
         private void RecvMsgMenu_ClearAll_Click(object? sender, RoutedEventArgs e)
         {
             Notifications.Clear();
+            NotificationHistoryStore.Clear();
         }
 
         private async void Menu_Settings_General_Click(object? sender, RoutedEventArgs e)
@@ -158,7 +166,7 @@ namespace AndroidRedirectNotification
             if (dgv.SelectedItem is NotificationRowItem selectedRow)
             {
                 var data = selectedRow.Data;
-                var viewMsgWindow = new ViewMsgWindow(data.Message, new List<string> { data.PictureIcon, data.Picture });
+                var viewMsgWindow = new ViewMsgWindow(data);
                 await viewMsgWindow.ShowDialog(this);
             }
         }

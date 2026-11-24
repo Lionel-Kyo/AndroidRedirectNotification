@@ -9,6 +9,7 @@ namespace AndroidRedirectNotification
     internal class MyNotificationData
     {
         public long TimeStamp { get; set; }
+        public string SbnKey { get; set; }
         public int Id { get; set; }
         public string Tag { get; set; }
         public string PackageName { get; set; }
@@ -30,10 +31,13 @@ namespace AndroidRedirectNotification
         /// ShowLights, OngoingEvent, Insistent, OnlyAlertOnce, AutoCancel, NoClear, ForegroundService, HighPriority, LocalOnly, GroupSummary, Bubble
         /// </summary>
         public List<string> Flags { get; set; }
+        public bool IsUpdate { get; set; }
+        public bool IsRemoved { get; set; }
 
         public MyNotificationData()
         {
             TimeStamp = 0;
+            SbnKey = "";
             Id = 0;
             Tag = "";
             PackageName = "";
@@ -46,11 +50,21 @@ namespace AndroidRedirectNotification
             ActionTitles = new List<string>();
             Flags = new List<string>();
             Importantce = 0;
+            IsUpdate = false;
+            IsRemoved = false;
         }
 
         public DateTime GetDateTime()
         {
             return DateTimeOffset.FromUnixTimeSeconds(TimeStamp).ToLocalTime().DateTime;
+        }
+
+        public string GetSlotKey()
+        {
+            if (!string.IsNullOrWhiteSpace(SbnKey))
+                return SbnKey;
+
+            return $"{PackageName ?? string.Empty}\u001f{Tag ?? string.Empty}\u001f{Id}";
         }
     }
 }

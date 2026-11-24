@@ -6,3 +6,9 @@ src/AndroidRedirectNotificationServer/AndroidRedirectNotification/bin/*
 src/AndroidRedirectNotificationServer/AndroidRedirectNotification/obj/*
 src/AndroidRedirectNotificationClient/AndroidRedirectNotification/bin/*
 src/AndroidRedirectNotificationClient/AndroidRedirectNotification/obj/*
+src/AndroidRedirectNotificationClient/AndroidRedirectNotification/Resources/Raw/*.pub
+src/AndroidRedirectNotificationClient/AndroidRedirectNotification/Resources/Raw/*.key
+src/AndroidRedirectNotificationServer/AndroidRedirectNotification/Assets/*.pub
+src/AndroidRedirectNotificationServer/AndroidRedirectNotification/Assets/*.key
+
+/src/keys

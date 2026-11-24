@@ -8,16 +8,10 @@ namespace AndroidRedirectNotification
 {
     internal class NotificationRowItem
     {
-        public string DateTimeId { get; set; } = string.Empty;
-        public string Tag { get; set; } = string.Empty;
-        public string PackageName { get; set; } = string.Empty;
-        public string AppName { get; set; } = string.Empty;
-        public string Title { get; set; } = string.Empty;
-        public string Message { get; set; } = string.Empty;
-        public string Category { get; set; } = string.Empty;
-        public string Importance { get; set; } = string.Empty;
-        public string ActionTitles { get; set; } = string.Empty;
-        public string Flags { get; set; } = string.Empty;
-        public MyNotificationData Data { get; set; } = null!;
+        public string TimeId { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string Title { get; set; } = "";
+        public string Message { get; set; } = "";
+        public MyNotificationData Data { get; set; } = new();
     }
 }

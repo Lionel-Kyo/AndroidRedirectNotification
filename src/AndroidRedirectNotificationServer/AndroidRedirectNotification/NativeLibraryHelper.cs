@@ -19,6 +19,9 @@ namespace AndroidRedirectNotification
 
                 var avaloniaWin32Assembly = typeof(Avalonia.Win32PlatformOptions).Assembly;
                 NativeLibrary.SetDllImportResolver(avaloniaWin32Assembly, ResolveDll);
+
+                var nsecAssembly = typeof(NSec.Cryptography.Algorithm).Assembly;
+                NativeLibrary.SetDllImportResolver(nsecAssembly, ResolveDll);
             }
             catch (Exception ex)
             {

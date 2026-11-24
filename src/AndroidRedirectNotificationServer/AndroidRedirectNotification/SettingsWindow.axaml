@@ -3,14 +3,54 @@
         x:Class="AndroidRedirectNotification.SettingsWindow"
         Title="Settings" SizeToContent="WidthAndHeight"
         WindowStartupLocation="CenterOwner" KeyDown="SettingsWindow_KeyDown">
-    <StackPanel Margin="20" Spacing="12">
-        <StackPanel Orientation="Horizontal" Spacing="10">
-            <TextBlock Text="Port:" VerticalAlignment="Center" Width="160" />
-            <NumericUpDown Name="portNum" Minimum="1" Maximum="65535" Width="160" />
-        </StackPanel>
+	<StackPanel Margin="20" Spacing="12">
+		<StackPanel Orientation="Horizontal" Spacing="10">
+			<TextBlock Text="Port:" VerticalAlignment="Center" Width="160" />
+			<NumericUpDown Name="portNum" Minimum="1" Maximum="65535" Width="160" />
+		</StackPanel>
 
-        <CheckBox Name="showWindowsNotificationCheck" Content="Show Windows Notifications" />
+		<CheckBox Name="showWindowsToastCheck" Content="Show Windows Toast" />
+		<CheckBox Name="showToastOnUpdateCheck" Content="Show Windows Toast on Update" />
 
-        <Button Name="applyBtn" Content="Apply" HorizontalAlignment="Right" Width="90" Click="ApplyBtn_Click" />
-    </StackPanel>
+		<TextBlock Text="Blocked Categories:" FontWeight="SemiBold" />
+		<ListBox Name="blockedCategoriesList" SelectionMode="Multiple" Height="150" Width="330">
+			<ListBoxItem Content="sys" />
+			<ListBoxItem Content="stopwatch" />
+			<ListBoxItem Content="status" />
+			<ListBoxItem Content="social" />
+			<ListBoxItem Content="service" />
+			<ListBoxItem Content="reminder" />
+			<ListBoxItem Content="recommendation" />
+			<ListBoxItem Content="promo" />
+			<ListBoxItem Content="progress" />
+			<ListBoxItem Content="navigation" />
+			<ListBoxItem Content="missed_call" />
+			<ListBoxItem Content="msg" />
+			<ListBoxItem Content="location_sharing" />
+			<ListBoxItem Content="event" />
+			<ListBoxItem Content="err" />
+			<ListBoxItem Content="call" />
+			<ListBoxItem Content="android.isGroupConversation" />
+			<ListBoxItem Content="transport" />
+			<ListBoxItem Content="workout" />
+			<ListBoxItem Content="email" />
+		</ListBox>
+
+		<TextBlock Text="Blocked Flags:" FontWeight="SemiBold" />
+		<ListBox Name="blockedFlagsList" SelectionMode="Multiple" Height="150" Width="330">
+			<ListBoxItem Content="ShowLights" />
+			<ListBoxItem Content="OngoingEvent" />
+			<ListBoxItem Content="Insistent" />
+			<ListBoxItem Content="OnlyAlertOnce" />
+			<ListBoxItem Content="AutoCancel" />
+			<ListBoxItem Content="NoClear" />
+			<ListBoxItem Content="ForegroundService" />
+			<ListBoxItem Content="HighPriority" />
+			<ListBoxItem Content="LocalOnly" />
+			<ListBoxItem Content="GroupSummary" />
+			<ListBoxItem Content="Bubble" />
+		</ListBox>
+
+		<Button Name="applyBtn" Content="Apply" HorizontalAlignment="Right" Width="90" Click="ApplyBtn_Click" />
+	</StackPanel>
 </Window>

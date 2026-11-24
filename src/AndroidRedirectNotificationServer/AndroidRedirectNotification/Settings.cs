@@ -10,12 +10,37 @@ namespace AndroidRedirectNotification
     {
         public static readonly string SettingsPath = "./Settings/Settings.json";
         public ushort Port { get; set; }
-        public bool ShowWindowsNotification { get; set; }
+        public bool ShowWindowsToast { get; set; }
+        public bool ShowToastOnUpdate { get; set; }
+        public List<string> BlockedCategories { get; set; }
+        public List<string> BlockedFlags { get; set; }
 
         public Settings()
         {
-            this.Port = 443;
-            this.ShowWindowsNotification = true;
+            this.Port = 5000;
+            this.ShowWindowsToast = true;
+            this.ShowToastOnUpdate = false;
+            this.BlockedCategories = ["transport"];
+            this.BlockedFlags = ["OngoingEvent"];
+        }
+
+        public bool ShouldShowWindowsToast(MyNotificationData notification)
+        {
+            if (!ShowWindowsToast || notification.IsRemoved)
+                return false;
+
+            if (!string.IsNullOrEmpty(notification.Category) &&
+                BlockedCategories.Contains(notification.Category, StringComparer.OrdinalIgnoreCase))
+                return false;
+
+            if (notification.Flags.Any(flag =>
+                BlockedFlags.Contains(flag, StringComparer.OrdinalIgnoreCase)))
+                return false;
+
+            if (notification.IsUpdate && !ShowToastOnUpdate)
+                return false;
+
+            return true;
         }
 
         public static Settings? ReadSettings()

@@ -46,20 +46,22 @@ public class NotificationReceiverService : NotificationListenerService
         if (string.IsNullOrEmpty(title) || string.IsNullOrEmpty(message))
             return;
 
-        if (MainPage.SkipDuplicateMessages)
+        var disposition = MainPage.DuplicateTracker.Evaluate(
+            sbn.Key,
+            packageName,
+            title,
+            message,
+            id,
+            tag,
+            MainPage.DuplicateIntervalSeconds,
+            MainPage.MatchContentOnly);
+
+        if (MainPage.SkipDuplicateMessages && disposition == NotificationDisposition.Duplicate)
         {
-            if (MainPage.DuplicateTracker.IsDuplicate(
-                packageName,
-                title,
-                message,
-                id,
-                tag,
-                MainPage.DuplicateIntervalSeconds,
-                MainPage.MatchContentOnly))
-            {
-                return;
-            }
+            return;
         }
+
+        bool isUpdate = disposition == NotificationDisposition.Updated;
 
         string pictureBase64 = "";
         string pictureIconBase64 = "";
@@ -104,13 +106,14 @@ public class NotificationReceiverService : NotificationListenerService
         };
         jsonSerializerOptions.Converters.Add(new JsonNumberEnumConverter<NotificationFlags>());
 
-        string appName = GetApplicationName(packageName) ?? packageName;
+        string appName = GetApplicationName(packageName) ?? "";
 
         if (MainPage.IsSendToServerEnabled)
         {
             var myData = new MyNotificationData()
             {
                 TimeStamp = timestamp,
+                SbnKey = sbn.Key ?? "",
                 Id = id,
                 Tag = tag,
                 PackageName = packageName,
@@ -122,7 +125,9 @@ public class NotificationReceiverService : NotificationListenerService
                 Category = notification.Category ?? "",
                 Importantce = notificationImportance,
                 ActionTitles = actionTitles,
-                Flags = Enum.GetValues(typeof(NotificationFlags)).Cast<NotificationFlags>().Where(f => notification.Flags.HasFlag(f)).Select(f => f.ToString()).ToList()
+                Flags = Enum.GetValues(typeof(NotificationFlags)).Cast<NotificationFlags>().Where(f => notification.Flags.HasFlag(f)).Select(f => f.ToString()).ToList(),
+                IsUpdate = isUpdate,
+                IsRemoved = false
             };
 
             string jsonText = JsonSerializer.Serialize(myData, jsonSerializerOptions);
@@ -137,6 +142,65 @@ public class NotificationReceiverService : NotificationListenerService
     public override void OnNotificationRemoved(StatusBarNotification? sbn)
     {
         base.OnNotificationRemoved(sbn);
+        if (sbn == null)
+            return;
+
+        string packageName = sbn.PackageName ?? "";
+        string tag = sbn.Tag ?? "";
+        int id = sbn.Id;
+
+        MainPage.DuplicateTracker.MarkRemoved(sbn.Key, packageName, tag, id);
+
+        if (!MainPage.IsSendToServerEnabled)
+            return;
+
+        var notification = sbn.Notification;
+        string title = notification?.Extras?.GetCharSequence(Notification.ExtraTitle)?.ToString() ?? "";
+        string message = notification?.Extras?.GetCharSequence(Notification.ExtraText)?.ToString() ?? "";
+        string appName = GetApplicationName(packageName) ?? "";
+
+        var actionTitles = notification?.Actions?.Select(a => a.Title?.ToString() ?? "")?.ToList() ?? new List<string>();
+        int notificationImportance = 3; // Default
+
+        if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
+        {
+#pragma warning disable CA1416
+            var manager = (NotificationManager?)Android.App.Application.Context.GetSystemService(Context.NotificationService);
+            var channel = manager?.GetNotificationChannel(notification?.ChannelId);
+            if (channel != null && channel.Importance != NotificationImportance.Unspecified)
+            {
+                notificationImportance = (int)channel.Importance;
+            }
+#pragma warning restore CA1416
+        }
+
+        var removedData = new MyNotificationData
+        {
+            TimeStamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            SbnKey = sbn.Key ?? "",
+            Id = id,
+            Tag = tag,
+            PackageName = packageName,
+            AppName = appName,
+            Title = title,
+            Message = message,
+            Picture = "",
+            PictureIcon = "",
+            Category = notification?.Category ?? "",
+            Importantce = notificationImportance,
+            ActionTitles = actionTitles,
+            Flags = notification != null ? Enum.GetValues(typeof(NotificationFlags)).Cast<NotificationFlags>().Where(f => notification.Flags.HasFlag(f)).Select(f => f.ToString()).ToList() : new List<string>(),
+            IsUpdate = false,
+            IsRemoved = true
+        };
+
+        var jsonSerializerOptions = new JsonSerializerOptions
+        {
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+        jsonSerializerOptions.Converters.Add(new JsonNumberEnumConverter<NotificationFlags>());
+
+        _ = SendToServerAsync(JsonSerializer.Serialize(removedData, jsonSerializerOptions));
     }
 
     private string? GetApplicationName(string packageName)
@@ -164,41 +228,29 @@ public class NotificationReceiverService : NotificationListenerService
         {
             try
             {
-                using (TcpClient client = new TcpClient())
+                using TcpClient client = new TcpClient();
+
+                try
                 {
-                    try
-                    {
-                        await client.ConnectAsync(MainPage.ServerIp, MainPage.ServerPort).WaitAsync(TimeSpan.FromMilliseconds(1000));
-                    }
-                    catch (TimeoutException)
-                    {
-                        Log.Error("NotificationReceiverService", $"Connection timed out (Attempt {attempt}/{maxRetries})");
-                    }
-
-                    using (NetworkStream networkStream = client.GetStream())
-                    {
-                        MyNetworkStream stream = new MyNetworkStream(networkStream);
-                        byte[] buffer = await stream.ReadAsync();
-                        byte[] rsaPublicKey = buffer;
-                        byte[] aesKey = AES.MessageByteCryption.GenerateKey();
-
-                        await stream.WriteAsync(RSA.MessageByteCryption.EncryptRsa(aesKey, rsaPublicKey));
-                        buffer = await stream.ReadAsync();
-
-                        var status = JsonSerializer.Deserialize<Dictionary<string, int>>(
-                            Encoding.UTF8.GetString(
-                                AES.MessageByteCryption.Decrypt(buffer, aesKey)
-                            )
-                        );
-
-                        if (status != null && status.TryGetValue("Status", out int i32Status) && i32Status != 0)
-                        {
-                            byte[] encryptedMessage = AES.MessageByteCryption.Encrypt(Encoding.UTF8.GetBytes(message), aesKey);
-                            await stream.WriteAsync(encryptedMessage);
-                        }
-                    }
-                    return;
+                    await client.ConnectAsync(MainPage.ServerIp, MainPage.ServerPort)
+                        .WaitAsync(TimeSpan.FromMilliseconds(1000));
                 }
+                catch (TimeoutException)
+                {
+                    Log.Error("NotificationReceiverService", $"Connection timed out (Attempt {attempt}/{maxRetries})");
+                    if (attempt < maxRetries)
+                    {
+                        Log.Info("NotificationReceiverService", $"Retrying in {retryDelayMs / 1000d} seconds...");
+                        await Task.Delay(retryDelayMs);
+                    }
+                    continue;
+                }
+
+                using NetworkStream networkStream = client.GetStream();
+                var stream = new MyNetworkStream(networkStream);
+
+                await stream.SendEncryptedMessageAsync(message);
+                return;
             }
             catch (Exception ex)
             {

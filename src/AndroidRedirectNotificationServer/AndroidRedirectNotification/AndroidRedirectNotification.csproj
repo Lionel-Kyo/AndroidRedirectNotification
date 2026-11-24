@@ -14,20 +14,23 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="12.1.3" />
-    <PackageReference Include="Avalonia.Desktop" Version="12.1.3" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.3" />
+    <PackageReference Include="Avalonia" Version="12.2.0" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.2.0" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.2.0" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.1.2" />
+    <PackageReference Include="NSec.Cryptography" Version="26.4.0" />
   </ItemGroup>
 
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
+    <AvaloniaResource Remove="Assets\server_ed25519.key" />
     <None Update="Assets\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Assets\server_ed25519.key" />
     <EmbeddedResource Include="Native\libSkiaSharp.dll">
       <LogicalName>AndroidRedirectNotification.Native.libSkiaSharp.dll</LogicalName>
     </EmbeddedResource>
@@ -36,6 +39,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Native\av_libGLESv2.dll">
       <LogicalName>AndroidRedirectNotification.Native.av_libGLESv2.dll</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Native\libsodium.dll">
+      <LogicalName>AndroidRedirectNotification.Native.libsodium.dll</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
 
