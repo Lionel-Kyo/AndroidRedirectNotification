@@ -1,56 +1,170 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="AndroidRedirectNotification.SettingsWindow"
-        Title="Settings" SizeToContent="WidthAndHeight"
-        WindowStartupLocation="CenterOwner" KeyDown="SettingsWindow_KeyDown">
-	<StackPanel Margin="20" Spacing="12">
-		<StackPanel Orientation="Horizontal" Spacing="10">
-			<TextBlock Text="Port:" VerticalAlignment="Center" Width="160" />
-			<NumericUpDown Name="portNum" Minimum="1" Maximum="65535" Width="160" />
+        Title="Server Settings"
+        Icon="/Assets/appicon.ico"
+        Width="460" Height="640"
+        MinWidth="400" MinHeight="500"
+        WindowStartupLocation="CenterOwner"
+        Background="#121218"
+        KeyDown="SettingsWindow_KeyDown">
+
+	<ScrollViewer Name="mainScrollViewer" Padding="20">
+		<StackPanel Spacing="16">
+
+			<!-- Header -->
+			<StackPanel Spacing="4">
+				<TextBlock Text="Server Settings"
+				           FontSize="18"
+				           FontWeight="Bold"
+				           Foreground="#E6E1E5" />
+				<TextBlock Text="Configure network port, Windows toast, and notification filters."
+				           FontSize="12"
+				           Foreground="#808095" />
+			</StackPanel>
+
+			<!-- Connection Settings Card -->
+			<Border Background="#1E1E2A"
+			        BorderBrush="#2D2D3F"
+			        BorderThickness="1"
+			        CornerRadius="10"
+			        Padding="16">
+				<StackPanel Spacing="10">
+					<TextBlock Text="Network Connection"
+					           FontSize="14"
+					           FontWeight="SemiBold"
+					           Foreground="#D0BCFF" />
+
+					<Grid ColumnDefinitions="*,130" VerticalAlignment="Center">
+						<StackPanel VerticalAlignment="Center">
+							<TextBlock Text="Listening Port" FontSize="13" Foreground="#E6E1E5" />
+							<TextBlock Text="TCP port for client to connect" FontSize="11" Foreground="#808095" />
+						</StackPanel>
+						<NumericUpDown Name="portNum"
+						               Grid.Column="1"
+						               Minimum="1"
+						               Maximum="65535"
+						               Value="5000"
+						               Height="36"
+						               Background="#161622"
+						               BorderBrush="#2D2D3F"
+						               Foreground="#E6E1E5"
+						               HorizontalAlignment="Right"
+						               Width="160" />
+					</Grid>
+				</StackPanel>
+			</Border>
+
+			<!-- Toast Notifications Card -->
+			<Border Background="#1E1E2A"
+			        BorderBrush="#2D2D3F"
+			        BorderThickness="1"
+			        CornerRadius="10"
+			        Padding="16">
+				<StackPanel Spacing="12">
+					<TextBlock Text="Windows Toast Notifications"
+					           FontSize="14"
+					           FontWeight="SemiBold"
+					           Foreground="#D0BCFF" />
+
+					<CheckBox Name="showWindowsToastCheck"
+					          Content="Show Windows Toast for new notifications"
+					          Foreground="#E6E1E5" />
+
+					<CheckBox Name="showToastOnUpdateCheck"
+					          Content="Show Windows Toast when notification is updated"
+					          Foreground="#E6E1E5" />
+				</StackPanel>
+			</Border>
+
+			<!-- Filter Rules Card -->
+			<Border Background="#1E1E2A"
+			        BorderBrush="#2D2D3F"
+			        BorderThickness="1"
+			        CornerRadius="10"
+			        Padding="16">
+				<StackPanel Spacing="14">
+					<TextBlock Text="Filter Rules"
+					           FontSize="14"
+					           FontWeight="SemiBold"
+					           Foreground="#D0BCFF" />
+
+					<!-- Blocked Categories -->
+					<StackPanel Spacing="6">
+						<TextBlock Text="Blocked Categories (Ctrl+Click to select multiple):"
+						           FontSize="12"
+						           Foreground="#CAC4D0" />
+						<ListBox Name="blockedCategoriesList"
+						         SelectionMode="Multiple"
+						         Height="130"
+						         Background="#161622"
+						         BorderBrush="#2D2D3F"
+						         BorderThickness="1"
+						         CornerRadius="6">
+							<ListBoxItem Content="sys" />
+							<ListBoxItem Content="stopwatch" />
+							<ListBoxItem Content="status" />
+							<ListBoxItem Content="social" />
+							<ListBoxItem Content="service" />
+							<ListBoxItem Content="reminder" />
+							<ListBoxItem Content="recommendation" />
+							<ListBoxItem Content="promo" />
+							<ListBoxItem Content="progress" />
+							<ListBoxItem Content="navigation" />
+							<ListBoxItem Content="missed_call" />
+							<ListBoxItem Content="msg" />
+							<ListBoxItem Content="location_sharing" />
+							<ListBoxItem Content="event" />
+							<ListBoxItem Content="err" />
+							<ListBoxItem Content="call" />
+							<ListBoxItem Content="android.isGroupConversation" />
+							<ListBoxItem Content="transport" />
+							<ListBoxItem Content="workout" />
+							<ListBoxItem Content="email" />
+						</ListBox>
+					</StackPanel>
+
+					<!-- Blocked Flags -->
+					<StackPanel Spacing="6">
+						<TextBlock Text="Blocked Flags (Ctrl+Click to select multiple):"
+						           FontSize="12"
+						           Foreground="#CAC4D0" />
+						<ListBox Name="blockedFlagsList"
+						         SelectionMode="Multiple"
+						         Height="120"
+						         Background="#161622"
+						         BorderBrush="#2D2D3F"
+						         BorderThickness="1"
+						         CornerRadius="6">
+							<ListBoxItem Content="ShowLights" />
+							<ListBoxItem Content="OngoingEvent" />
+							<ListBoxItem Content="Insistent" />
+							<ListBoxItem Content="OnlyAlertOnce" />
+							<ListBoxItem Content="AutoCancel" />
+							<ListBoxItem Content="NoClear" />
+							<ListBoxItem Content="ForegroundService" />
+							<ListBoxItem Content="HighPriority" />
+							<ListBoxItem Content="LocalOnly" />
+							<ListBoxItem Content="GroupSummary" />
+							<ListBoxItem Content="Bubble" />
+						</ListBox>
+					</StackPanel>
+				</StackPanel>
+			</Border>
+
+			<!-- Action Buttons -->
+			<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,4,0,8">
+				<Button Name="cancelBtn"
+				        Content="Cancel"
+				        Classes="secondary"
+				        Click="CancelBtn_Click" />
+
+				<Button Name="applyBtn"
+				        Content="Save Settings"
+				        Classes="accent"
+				        Click="ApplyBtn_Click" />
+			</StackPanel>
+
 		</StackPanel>
-
-		<CheckBox Name="showWindowsToastCheck" Content="Show Windows Toast" />
-		<CheckBox Name="showToastOnUpdateCheck" Content="Show Windows Toast on Update" />
-
-		<TextBlock Text="Blocked Categories:" FontWeight="SemiBold" />
-		<ListBox Name="blockedCategoriesList" SelectionMode="Multiple" Height="150" Width="330">
-			<ListBoxItem Content="sys" />
-			<ListBoxItem Content="stopwatch" />
-			<ListBoxItem Content="status" />
-			<ListBoxItem Content="social" />
-			<ListBoxItem Content="service" />
-			<ListBoxItem Content="reminder" />
-			<ListBoxItem Content="recommendation" />
-			<ListBoxItem Content="promo" />
-			<ListBoxItem Content="progress" />
-			<ListBoxItem Content="navigation" />
-			<ListBoxItem Content="missed_call" />
-			<ListBoxItem Content="msg" />
-			<ListBoxItem Content="location_sharing" />
-			<ListBoxItem Content="event" />
-			<ListBoxItem Content="err" />
-			<ListBoxItem Content="call" />
-			<ListBoxItem Content="android.isGroupConversation" />
-			<ListBoxItem Content="transport" />
-			<ListBoxItem Content="workout" />
-			<ListBoxItem Content="email" />
-		</ListBox>
-
-		<TextBlock Text="Blocked Flags:" FontWeight="SemiBold" />
-		<ListBox Name="blockedFlagsList" SelectionMode="Multiple" Height="150" Width="330">
-			<ListBoxItem Content="ShowLights" />
-			<ListBoxItem Content="OngoingEvent" />
-			<ListBoxItem Content="Insistent" />
-			<ListBoxItem Content="OnlyAlertOnce" />
-			<ListBoxItem Content="AutoCancel" />
-			<ListBoxItem Content="NoClear" />
-			<ListBoxItem Content="ForegroundService" />
-			<ListBoxItem Content="HighPriority" />
-			<ListBoxItem Content="LocalOnly" />
-			<ListBoxItem Content="GroupSummary" />
-			<ListBoxItem Content="Bubble" />
-		</ListBox>
-
-		<Button Name="applyBtn" Content="Apply" HorizontalAlignment="Right" Width="90" Click="ApplyBtn_Click" />
-	</StackPanel>
+	</ScrollViewer>
 </Window>

@@ -57,6 +57,11 @@ namespace AndroidRedirectNotification
             base.OnClosing(e);
         }
 
+        private void CloseButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            Close();
+        }
+
         private void ExceptionRecordViewer_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape)

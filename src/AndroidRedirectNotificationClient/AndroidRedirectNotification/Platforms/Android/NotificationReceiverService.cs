@@ -8,6 +8,7 @@ using Android.OS;
 using Android.Service.Notification;
 using Android.Util;
 using AndroidRedirectNotification;
+using AndroidRedirectNotification.Models;
 using AndroidRedirectNotification.Platforms.Android;
 using Java.Security.Interfaces;
 using System.Net.Sockets;
@@ -25,15 +26,12 @@ public class NotificationReceiverService : NotificationListenerService
         base.OnListenerConnected();
     }
 
-    public override void OnNotificationPosted(StatusBarNotification? sbn)
+    private MyNotificationData? GetMyNotificationData(StatusBarNotification? sbn)
     {
-        base.OnNotificationPosted(sbn);
-        if (sbn == null)
-            return;
+        if (sbn == null) return null;
 
         var notification = sbn.Notification;
-        if (notification == null)
-            return;
+        if (notification == null) return null;
 
         DateTimeOffset utcNow = DateTimeOffset.UtcNow;
         long timestamp = utcNow.ToUnixTimeSeconds();
@@ -43,25 +41,7 @@ public class NotificationReceiverService : NotificationListenerService
         string? title = notification.Extras?.GetCharSequence(Notification.ExtraTitle);
         string? message = notification.Extras?.GetCharSequence(Notification.ExtraText);
 
-        if (string.IsNullOrEmpty(title) || string.IsNullOrEmpty(message))
-            return;
-
-        var disposition = MainPage.DuplicateTracker.Evaluate(
-            sbn.Key,
-            packageName,
-            title,
-            message,
-            id,
-            tag,
-            MainPage.DuplicateIntervalSeconds,
-            MainPage.MatchContentOnly);
-
-        if (MainPage.SkipDuplicateMessages && disposition == NotificationDisposition.Duplicate)
-        {
-            return;
-        }
-
-        bool isUpdate = disposition == NotificationDisposition.Updated;
+        if (string.IsNullOrEmpty(title) || string.IsNullOrEmpty(message)) return null;
 
         string pictureBase64 = "";
         string pictureIconBase64 = "";
@@ -108,75 +88,9 @@ public class NotificationReceiverService : NotificationListenerService
 
         string appName = GetApplicationName(packageName) ?? "";
 
-        if (MainPage.IsSendToServerEnabled)
+        return new MyNotificationData()
         {
-            var myData = new MyNotificationData()
-            {
-                TimeStamp = timestamp,
-                SbnKey = sbn.Key ?? "",
-                Id = id,
-                Tag = tag,
-                PackageName = packageName,
-                AppName = appName,
-                Title = title,
-                Message = message,
-                Picture = pictureBase64,
-                PictureIcon = pictureIconBase64,
-                Category = notification.Category ?? "",
-                Importantce = notificationImportance,
-                ActionTitles = actionTitles,
-                Flags = Enum.GetValues(typeof(NotificationFlags)).Cast<NotificationFlags>().Where(f => notification.Flags.HasFlag(f)).Select(f => f.ToString()).ToList(),
-                IsUpdate = isUpdate,
-                IsRemoved = false
-            };
-
-            string jsonText = JsonSerializer.Serialize(myData, jsonSerializerOptions);
-
-            _ = SendToServerAsync(jsonText);
-        }
-
-        string displayTitle = $"{(string.IsNullOrWhiteSpace(appName) ? packageName : appName)} • {title}";
-        MainPage.LogNotification(message, displayTitle, utcNow);
-    }
-
-    public override void OnNotificationRemoved(StatusBarNotification? sbn)
-    {
-        base.OnNotificationRemoved(sbn);
-        if (sbn == null)
-            return;
-
-        string packageName = sbn.PackageName ?? "";
-        string tag = sbn.Tag ?? "";
-        int id = sbn.Id;
-
-        MainPage.DuplicateTracker.MarkRemoved(sbn.Key, packageName, tag, id);
-
-        if (!MainPage.IsSendToServerEnabled)
-            return;
-
-        var notification = sbn.Notification;
-        string title = notification?.Extras?.GetCharSequence(Notification.ExtraTitle)?.ToString() ?? "";
-        string message = notification?.Extras?.GetCharSequence(Notification.ExtraText)?.ToString() ?? "";
-        string appName = GetApplicationName(packageName) ?? "";
-
-        var actionTitles = notification?.Actions?.Select(a => a.Title?.ToString() ?? "")?.ToList() ?? new List<string>();
-        int notificationImportance = 3; // Default
-
-        if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
-        {
-#pragma warning disable CA1416
-            var manager = (NotificationManager?)Android.App.Application.Context.GetSystemService(Context.NotificationService);
-            var channel = manager?.GetNotificationChannel(notification?.ChannelId);
-            if (channel != null && channel.Importance != NotificationImportance.Unspecified)
-            {
-                notificationImportance = (int)channel.Importance;
-            }
-#pragma warning restore CA1416
-        }
-
-        var removedData = new MyNotificationData
-        {
-            TimeStamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            TimeStamp = timestamp,
             SbnKey = sbn.Key ?? "",
             Id = id,
             Tag = tag,
@@ -184,23 +98,73 @@ public class NotificationReceiverService : NotificationListenerService
             AppName = appName,
             Title = title,
             Message = message,
-            Picture = "",
-            PictureIcon = "",
-            Category = notification?.Category ?? "",
+            Picture = pictureBase64,
+            PictureIcon = pictureIconBase64,
+            Category = notification.Category ?? "",
             Importantce = notificationImportance,
             ActionTitles = actionTitles,
-            Flags = notification != null ? Enum.GetValues(typeof(NotificationFlags)).Cast<NotificationFlags>().Where(f => notification.Flags.HasFlag(f)).Select(f => f.ToString()).ToList() : new List<string>(),
-            IsUpdate = false,
-            IsRemoved = true
+            Flags = Enum.GetValues(typeof(NotificationFlags)).Cast<NotificationFlags>().Where(f => notification.Flags.HasFlag(f)).Select(f => f.ToString()).ToList()
         };
+    }
 
-        var jsonSerializerOptions = new JsonSerializerOptions
+    public override void OnNotificationPosted(StatusBarNotification? sbn)
+    {
+        base.OnNotificationPosted(sbn);
+
+        var data = GetMyNotificationData(sbn);
+        if (data == null) return;
+
+        var disposition = MainPage.DuplicateTracker.Evaluate(data, MainPage.DuplicateIntervalSeconds, MainPage.MatchContentOnly);
+
+        if (MainPage.SkipDuplicateMessages && 
+            (disposition == NotificationDisposition.NewDuplicate || disposition == NotificationDisposition.UpdatedDuplicate))
         {
-            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-        };
-        jsonSerializerOptions.Converters.Add(new JsonNumberEnumConverter<NotificationFlags>());
+            return;
+        }
 
-        _ = SendToServerAsync(JsonSerializer.Serialize(removedData, jsonSerializerOptions));
+        bool isUpdate = disposition == NotificationDisposition.Updated || disposition == NotificationDisposition.UpdatedDuplicate;
+
+        data.IsUpdate = isUpdate;
+        data.IsRemoved = false;
+
+        if (MainPage.IsSendToServerEnabled)
+        {
+            var jsonSerializerOptions = new JsonSerializerOptions
+            {
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            };
+            jsonSerializerOptions.Converters.Add(new JsonNumberEnumConverter<NotificationFlags>());
+
+            _ = SendToServerAsync(JsonSerializer.Serialize(data, jsonSerializerOptions));
+        }
+
+        MainPage.LogNotification(data);
+    }
+
+    public override void OnNotificationRemoved(StatusBarNotification? sbn)
+    {
+        base.OnNotificationRemoved(sbn);
+
+        var data = GetMyNotificationData(sbn);
+        if (data == null) return;
+
+        MainPage.DuplicateTracker.MarkRemoved(data);
+
+        data.IsUpdate = false;
+        data.IsRemoved = true;
+
+        if (MainPage.IsSendToServerEnabled)
+        {
+            var jsonSerializerOptions = new JsonSerializerOptions
+            {
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            };
+            jsonSerializerOptions.Converters.Add(new JsonNumberEnumConverter<NotificationFlags>());
+
+            _ = SendToServerAsync(JsonSerializer.Serialize(data, jsonSerializerOptions));
+        }
+
+        MainPage.LogNotification(data);
     }
 
     private string? GetApplicationName(string packageName)
@@ -212,8 +176,8 @@ public class NotificationReceiverService : NotificationListenerService
         {
             var packageManager = Android.App.Application.Context.PackageManager;
             var appInfo = packageManager?.GetApplicationInfo(packageName, 0);
-            if (appInfo == null)
-                return null;
+            if (appInfo == null) return null;
+
             return packageManager?.GetApplicationLabel(appInfo)?.ToString();
         }
         catch { return null; }
@@ -267,7 +231,7 @@ public class NotificationReceiverService : NotificationListenerService
         Log.Error("NotificationReceiverService", "Failed to send notification after multiple attempts.");
     }
 
-    public static string BitmapToBase64(Bitmap bitmap, Bitmap.CompressFormat compressFormat, int quality)
+    private static string BitmapToBase64(Bitmap bitmap, Bitmap.CompressFormat compressFormat, int quality)
     {
         using (var stream = new MemoryStream())
         {

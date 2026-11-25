@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:AndroidRedirectNotification"
+             x:Class="AndroidRedirectNotification.NotificationDetailPage"
+             NavigationPage.HasNavigationBar="False"
+             BackgroundColor="#121218">
+
+    <Grid RowDefinitions="Auto, *">
+        <!-- Top App Bar / Back Navigation -->
+        <Border Grid.Row="0" 
+                BackgroundColor="#1E1E2A" 
+                StrokeThickness="0" 
+                Padding="16,12">
+            <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="12">
+                <Button Grid.Column="0"
+                        x:Name="backBtn"
+                        Text="← Back"
+                        Clicked="OnBackButtonClicked"
+                        BackgroundColor="#2B2938"
+                        TextColor="#D0BCFF"
+                        FontAttributes="Bold"
+                        FontSize="13"
+                        CornerRadius="8"
+                        HeightRequest="36"
+                        Padding="12,0" />
+
+                <Label Grid.Column="1"
+                       Text="Notification Details"
+                       FontSize="18"
+                       FontAttributes="Bold"
+                       TextColor="#E6E1E5"
+                       VerticalOptions="Center" />
+
+                <Button Grid.Column="2"
+                        x:Name="copyAllBtn"
+                        Text="Copy All"
+                        Clicked="OnCopyAllClicked"
+                        BackgroundColor="#2B2938"
+                        TextColor="#E6E1E5"
+                        FontSize="12"
+                        CornerRadius="8"
+                        HeightRequest="36"
+                        Padding="10,0" />
+            </Grid>
+        </Border>
+
+        <!-- Main Scrollable Content -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="16" Spacing="16">
+
+                <!-- Header / Status Card -->
+                <Border BackgroundColor="#1E1E2A"
+                        Stroke="#2D2D3F"
+                        StrokeThickness="1"
+                        StrokeShape="RoundRectangle 14"
+                        Padding="16">
+                    <VerticalStackLayout Spacing="8">
+                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10" VerticalOptions="Center">
+                            <Label x:Name="appAndIdLabel"
+                                   Text="App Name • #ID"
+                                   FontSize="13"
+                                   FontAttributes="Bold"
+                                   TextColor="#D0BCFF"
+                                   LineBreakMode="TailTruncation"
+                                   VerticalOptions="Center" />
+
+                            <Border x:Name="statusBadge"
+                                    Grid.Column="1"
+                                    BackgroundColor="#1B3B22"
+                                    Stroke="#81C784"
+                                    StrokeThickness="1"
+                                    StrokeShape="RoundRectangle 6"
+                                    Padding="8,2"
+                                    VerticalOptions="Center">
+                                <Label x:Name="statusLabel"
+                                       Text="New"
+                                       TextColor="#81C784"
+                                       FontSize="11"
+                                       FontAttributes="Bold" />
+                            </Border>
+                        </Grid>
+
+                        <Label x:Name="titleLabel"
+                               Text="Notification Title"
+                               FontSize="17"
+                               FontAttributes="Bold"
+                               TextColor="#E6E1E5"
+                               LineBreakMode="WordWrap" />
+
+                        <Label x:Name="timestampLabel"
+                               Text="2026-11-25 00:00:00"
+                               FontSize="12"
+                               TextColor="#808090" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Status History Timeline Card -->
+                <Border BackgroundColor="#1E1E2A"
+                        Stroke="#2D2D3F"
+                        StrokeThickness="1"
+                        StrokeShape="RoundRectangle 14"
+                        Padding="16">
+                    <VerticalStackLayout Spacing="10">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <Label Text="Status &amp; Revision History"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   TextColor="#D0BCFF"
+                                   VerticalOptions="Center" />
+                            <Label x:Name="historyCountLabel"
+                                   Grid.Column="1"
+                                   Text="1 update"
+                                   FontSize="12"
+                                   TextColor="#808090"
+                                   VerticalOptions="Center" />
+                        </Grid>
+
+                        <Label Text="Tap any historical event below to inspect that version:"
+                               FontSize="11"
+                               TextColor="#808090" />
+
+                        <CollectionView x:Name="historyCollectionView"
+                                        SelectionMode="Single"
+                                        SelectionChanged="OnHistorySelectionChanged"
+                                        Margin="0,4,0,0">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="local:HistorySnapshotViewModel">
+                                    <Border BackgroundColor="#242434"
+                                            Stroke="#3A3A4E"
+                                            StrokeThickness="1"
+                                            StrokeShape="RoundRectangle 8"
+                                            Margin="0,0,0,6"
+                                            Padding="10">
+                                        <Grid ColumnDefinitions="Auto, Auto, *" ColumnSpacing="8" VerticalOptions="Center">
+                                            <Label Grid.Column="0"
+                                                   Text="{Binding TimeText}"
+                                                   FontSize="11"
+                                                   TextColor="#808090"
+                                                   VerticalOptions="Center" />
+
+                                            <Border Grid.Column="1"
+                                                    BackgroundColor="{Binding StatusBackground}"
+                                                    Stroke="{Binding StatusColor}"
+                                                    StrokeThickness="1"
+                                                    StrokeShape="RoundRectangle 4"
+                                                    Padding="4,1"
+                                                    VerticalOptions="Center">
+                                                <Label Text="{Binding StatusText}"
+                                                       TextColor="{Binding StatusColor}"
+                                                       FontSize="10"
+                                                       FontAttributes="Bold" />
+                                            </Border>
+
+                                            <Label Grid.Column="2"
+                                                   Text="{Binding Summary}"
+                                                   FontSize="12"
+                                                   TextColor="#E6E1E5"
+                                                   MaxLines="1"
+                                                   LineBreakMode="TailTruncation"
+                                                   VerticalOptions="Center" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Message Body Card -->
+                <Border BackgroundColor="#1E1E2A"
+                        Stroke="#2D2D3F"
+                        StrokeThickness="1"
+                        StrokeShape="RoundRectangle 14"
+                        Padding="16">
+                    <VerticalStackLayout Spacing="10">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <Label Text="Message Body"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   TextColor="#D0BCFF"
+                                   VerticalOptions="Center" />
+
+                            <Button Grid.Column="1"
+                                    x:Name="copyMsgBtn"
+                                    Text="Copy"
+                                    Clicked="OnCopyMessageClicked"
+                                    BackgroundColor="#2B2938"
+                                    TextColor="#D0BCFF"
+                                    FontSize="11"
+                                    CornerRadius="6"
+                                    HeightRequest="30"
+                                    Padding="10,0" />
+                        </Grid>
+
+                        <Border BackgroundColor="#161620"
+                                Stroke="#2D2D3F"
+                                StrokeThickness="1"
+                                StrokeShape="RoundRectangle 8"
+                                Padding="12">
+                            <Label x:Name="messageLabel"
+                                   Text="No message text."
+                                   FontSize="14"
+                                   TextColor="#E6E1E5"
+                                   LineBreakMode="WordWrap" />
+                        </Border>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Attached Images Card (visible only when images present) -->
+                <Border x:Name="imagesCard"
+                        BackgroundColor="#1E1E2A"
+                        Stroke="#2D2D3F"
+                        StrokeThickness="1"
+                        StrokeShape="RoundRectangle 14"
+                        Padding="16"
+                        IsVisible="False">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Attached Images"
+                               FontSize="14"
+                               FontAttributes="Bold"
+                               TextColor="#D0BCFF" />
+
+                        <!-- Picture preview -->
+                        <Border x:Name="pictureBorder"
+                                BackgroundColor="#161620"
+                                Stroke="#2D2D3F"
+                                StrokeThickness="1"
+                                StrokeShape="RoundRectangle 8"
+                                Padding="8"
+                                IsVisible="False">
+                            <VerticalStackLayout Spacing="6">
+                                <Label Text="Large Picture" FontSize="11" TextColor="#808090" />
+                                <Image x:Name="pictureImage"
+                                       Aspect="AspectFit"
+                                       MaximumHeightRequest="320"
+                                       HorizontalOptions="Center" />
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <!-- PictureIcon preview -->
+                        <Border x:Name="iconBorder"
+                                BackgroundColor="#161620"
+                                Stroke="#2D2D3F"
+                                StrokeThickness="1"
+                                StrokeShape="RoundRectangle 8"
+                                Padding="8"
+                                IsVisible="False">
+                            <VerticalStackLayout Spacing="6">
+                                <Label Text="Picture Icon" FontSize="11" TextColor="#808090" />
+                                <Image x:Name="iconImage"
+                                       Aspect="AspectFit"
+                                       HeightRequest="96"
+                                       WidthRequest="96"
+                                       HorizontalOptions="Start" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Technical Metadata Details Card -->
+                <Border BackgroundColor="#1E1E2A"
+                        Stroke="#2D2D3F"
+                        StrokeThickness="1"
+                        StrokeShape="RoundRectangle 14"
+                        Padding="16">
+                    <VerticalStackLayout Spacing="10">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <Label Text="Technical Details"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   TextColor="#D0BCFF"
+                                   VerticalOptions="Center" />
+
+                            <Button Grid.Column="1"
+                                    x:Name="copyMetadataBtn"
+                                    Text="Copy"
+                                    Clicked="OnCopyMetadataClicked"
+                                    BackgroundColor="#2B2938"
+                                    TextColor="#D0BCFF"
+                                    FontSize="11"
+                                    CornerRadius="6"
+                                    HeightRequest="30"
+                                    Padding="10,0" />
+                        </Grid>
+
+                        <Border BackgroundColor="#161620"
+                                Stroke="#2D2D3F"
+                                StrokeThickness="1"
+                                StrokeShape="RoundRectangle 8"
+                                Padding="12">
+                            <Label x:Name="metadataLabel"
+                                   Text="Loading details..."
+                                   FontSize="12"
+                                   TextColor="#CAC4D0"
+                                   FontFamily="Courier, monospace"
+                                   LineBreakMode="WordWrap" />
+                        </Border>
+                    </VerticalStackLayout>
+                </Border>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

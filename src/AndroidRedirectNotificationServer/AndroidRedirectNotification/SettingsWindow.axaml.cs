@@ -1,6 +1,8 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using System;
 
 namespace AndroidRedirectNotification
@@ -19,6 +21,15 @@ namespace AndroidRedirectNotification
             showToastOnUpdateCheck.IsChecked = settings.ShowToastOnUpdate;
             SelectMatchingItems(blockedCategoriesList, settings.BlockedCategories);
             SelectMatchingItems(blockedFlagsList, settings.BlockedFlags);
+        }
+
+        protected override void OnOpened(EventArgs e)
+        {
+            base.OnOpened(e);
+            Dispatcher.UIThread.Post(() =>
+            {
+                mainScrollViewer.Offset = new Vector(0, 0);
+            }, DispatcherPriority.Loaded);
         }
 
         private static void SelectMatchingItems(ListBox listBox, List<string> selectedValues)
@@ -68,6 +79,11 @@ namespace AndroidRedirectNotification
             }
 
             Close(newSettings);
+        }
+
+        private void CancelBtn_Click(object? sender, RoutedEventArgs e)
+        {
+            Close(null);
         }
 
         private void SettingsWindow_KeyDown(object? sender, KeyEventArgs e)

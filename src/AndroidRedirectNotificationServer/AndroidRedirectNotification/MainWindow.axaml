@@ -4,40 +4,105 @@
         x:Class="AndroidRedirectNotification.MainWindow"
         Title="Android Redirect Notification Server"
         Icon="/Assets/appicon.ico"
-        Width="840" Height="520"
-        MinWidth="640" MinHeight="380"
+        Width="960" Height="600"
+        MinWidth="720" MinHeight="440"
         WindowStartupLocation="CenterScreen">
 
-	<DockPanel>
-		<!-- MENU -->
-		<Menu DockPanel.Dock="Top">
-			<MenuItem Header="Settings">
-				<MenuItem Header="General" Click="Menu_Settings_General_Click" />
-			</MenuItem>
-			<MenuItem Header="Other">
-				<MenuItem Header="Exception History" Click="ExceptionHistory_Click" />
-			</MenuItem>
-		</Menu>
+	<Grid RowDefinitions="Auto,*,Auto">
+		<!-- HEADER BAR -->
+		<Border Grid.Row="0"
+		        Background="#1E1E2A"
+		        BorderBrush="#2D2D3F"
+		        BorderThickness="0,0,0,1"
+		        Padding="16,10">
+			<Grid ColumnDefinitions="Auto,Auto,*,Auto" VerticalAlignment="Center">
+				<!-- App Icon -->
+				<!--<Image Grid.Column="0"
+				       Source="/Assets/appicon.ico"
+				       Width="26" Height="26"
+				       VerticalAlignment="Center"
+				       Margin="0,0,12,0" />-->
 
-		<!-- CONTENT -->
-		<Grid RowDefinitions="Auto,*" Margin="10" RowSpacing="8">
-			<DockPanel Grid.Row="0" LastChildFill="False">
-				<TextBlock DockPanel.Dock="Left"
-				           Text="Received Messages"
+				<!-- App Title & Port Badge -->
+				<StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+					<!--<TextBlock Text="Redirect Notification Server"
+					           FontSize="15"
+					           FontWeight="Bold"
+					           Foreground="#E6E1E5"
+					           VerticalAlignment="Center" />-->
+
+					<!-- Status Pill -->
+					<Border Background="#162E20"
+					        BorderBrush="#4CAF50"
+					        BorderThickness="1"
+					        CornerRadius="12"
+					        Padding="8,2"
+					        VerticalAlignment="Center">
+						<StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+							<Ellipse Width="6" Height="6" Fill="#4CAF50" VerticalAlignment="Center" />
+							<TextBlock x:Name="txtPortStatus"
+							           Text="Port: 5000 • Active"
+							           FontSize="11"
+							           FontWeight="SemiBold"
+							           Foreground="#81C784"
+							           VerticalAlignment="Center" />
+						</StackPanel>
+					</Border>
+				</StackPanel>
+
+				<!-- Toolbar Buttons -->
+				<StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+					<Button Content="View Message"
+					        Classes="accent"
+					        Click="ShowMessage_Click" />
+
+					<Button Content="Settings"
+					        Classes="secondary"
+					        Click="Settings_General_Click" />
+
+					<Button Content="Exceptions"
+					        Classes="secondary"
+					        Click="ExceptionHistory_Click" />
+
+					<Button Content="Clear All"
+					        Classes="danger"
+					        Click="ClearAll_Click" />
+				</StackPanel>
+			</Grid>
+		</Border>
+
+		<!-- CONTENT AREA -->
+		<Grid Grid.Row="1" RowDefinitions="Auto,*" Margin="16,14,16,12" RowSpacing="10">
+			<!-- Section Header -->
+			<Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*" VerticalAlignment="Center">
+				<TextBlock Grid.Column="0"
+				           Text="Active Notifications"
 				           FontSize="15"
 				           FontWeight="SemiBold"
+				           Foreground="#E6E1E5"
 				           VerticalAlignment="Center" />
 
-				<StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8">
-					<Button Content="Show Message" Padding="10,4" Click="Menu_ShowMessage_Click" />
-					<Button Content="Clear All" Padding="10,4" Click="RecvMsgMenu_ClearAll_Click" />
-				</StackPanel>
-			</DockPanel>
+				<Border Grid.Column="1"
+				        Background="#252538"
+				        BorderBrush="#3D3D55"
+				        BorderThickness="1"
+				        CornerRadius="10"
+				        Padding="8,1"
+				        Margin="10,0,0,0"
+				        VerticalAlignment="Center">
+					<TextBlock x:Name="txtCountBadge"
+					           Text="0 items"
+					           FontSize="11"
+					           Foreground="#D0BCFF" />
+				</Border>
+			</Grid>
 
+			<!-- DataGrid Container -->
 			<Border Grid.Row="1"
-			        CornerRadius="6"
+			        Background="#1E1E2A"
+			        BorderBrush="#2D2D3F"
 			        BorderThickness="1"
-			        BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+			        CornerRadius="8"
 			        ClipToBounds="True">
 				<DataGrid x:Name="dgv"
 				          x:DataType="local:NotificationRowItem"
@@ -46,28 +111,72 @@
 				          CanUserResizeColumns="True"
 				          CanUserReorderColumns="True"
 				          GridLinesVisibility="Horizontal"
-				          HorizontalGridLinesBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
-				          RowHeight="32"
-				          DoubleTapped="Menu_ShowMessage_Click"
+				          HorizontalGridLinesBrush="#262638"
+				          RowHeight="36"
+				          DoubleTapped="ShowMessage_Click"
 				          ScrollViewer.HorizontalScrollBarVisibility="Auto">
 
 					<DataGrid.ContextMenu>
 						<ContextMenu>
-							<MenuItem Header="Show Message" Click="Menu_ShowMessage_Click" />
+							<MenuItem Header="View Message" Click="ShowMessage_Click" />
 							<Separator />
-							<MenuItem Header="Select All" Click="RecvMsgMenu_SelectAll_Click" />
-							<MenuItem Header="Clear All" Click="RecvMsgMenu_ClearAll_Click" />
+							<MenuItem Header="Select All" Click="SelectAll_Click" />
+							<MenuItem Header="Clear All" Click="ClearAll_Click" />
 						</ContextMenu>
 					</DataGrid.ContextMenu>
 
 					<DataGrid.Columns>
-						<DataGridTextColumn Header="Time (Id)" Binding="{Binding TimeId}" Width="110" />
-						<DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="150" />
-						<DataGridTextColumn Header="Title" Binding="{Binding Title}" Width="230" />
+						<!-- Status Badge Column -->
+						<DataGridTemplateColumn Header="Status" Width="90">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate x:DataType="local:NotificationRowItem">
+									<Border Background="{Binding StatusBackground}"
+									        BorderBrush="{Binding StatusColor}"
+									        BorderThickness="1"
+									        CornerRadius="4"
+									        Padding="6,2"
+									        HorizontalAlignment="Center"
+									        VerticalAlignment="Center">
+										<TextBlock Text="{Binding Status}"
+										           Foreground="{Binding StatusColor}"
+										           FontSize="11"
+										           FontWeight="Bold"
+										           HorizontalAlignment="Center" />
+									</Border>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+
+						<DataGridTextColumn Header="Event" Binding="{Binding NumberOfEvents}" Width="90" />
+						<DataGridTextColumn Header="Time" Binding="{Binding Time}" Width="120" />
+						<DataGridTextColumn Header="App Name" Binding="{Binding Name}" Width="150" />
+						<DataGridTextColumn Header="Title" Binding="{Binding Title}" Width="220" />
 						<DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="*" MinWidth="180" />
 					</DataGrid.Columns>
 				</DataGrid>
 			</Border>
 		</Grid>
-	</DockPanel>
+
+		<!-- FOOTER STATUS BAR -->
+		<Border Grid.Row="2"
+		        Background="#161622"
+		        BorderBrush="#2D2D3F"
+		        BorderThickness="0,1,0,0"
+		        Padding="16,6">
+			<Grid ColumnDefinitions="*,Auto">
+				<TextBlock Grid.Column="0"
+				           x:Name="txtFooterStatus"
+				           Text="● Server active • X25519/Ed25519 + AES-256-GCM encrypted"
+				           FontSize="11"
+				           Foreground="#808095"
+				           VerticalAlignment="Center" />
+
+				<TextBlock Grid.Column="1"
+				           Text="Tip: Double-click any row to view full message &amp; history"
+				           FontSize="11"
+				           Foreground="#9A72EC"
+				           VerticalAlignment="Center" />
+			</Grid>
+		</Border>
+	</Grid>
 </Window>

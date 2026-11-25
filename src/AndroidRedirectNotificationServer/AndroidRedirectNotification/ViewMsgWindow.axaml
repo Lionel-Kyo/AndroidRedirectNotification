@@ -2,69 +2,162 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:imaging="using:Avalonia.Media.Imaging"
         x:Class="AndroidRedirectNotification.ViewMsgWindow"
-        Title="View Message"
-        Width="640" Height="540"
-        MinWidth="460" MinHeight="360"
+        Title="Notification Message Details"
+        Icon="/Assets/appicon.ico"
+        Width="740" Height="640"
+        MinWidth="520" MinHeight="420"
         WindowStartupLocation="CenterOwner"
+        Background="#121218"
         KeyDown="ViewMsgWindow_KeyDown">
 
-	<ScrollViewer Padding="16">
+	<ScrollViewer Padding="20">
 		<StackPanel Spacing="16">
-			<Expander Header="Status History" IsExpanded="True">
-				<ListBox Name="lstHistory" Margin="0,8,0,0" MaxHeight="220" SelectionChanged="LstHistory_SelectionChanged">
+
+			<!-- Status & Header Card -->
+			<Border Background="#1E1E2A"
+			        BorderBrush="#2D2D3F"
+			        BorderThickness="1"
+			        CornerRadius="10"
+			        Padding="16">
+				<StackPanel Spacing="8">
+					<Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+						<!-- App Name & Time/Id -->
+						<SelectableTextBlock Name="txtTitle1"
+						                     FontSize="13"
+						                     FontWeight="SemiBold"
+						                     Foreground="#D0BCFF"
+						                     TextWrapping="Wrap"
+						                     VerticalAlignment="Center" />
+
+						<!-- Status Badge -->
+						<Border Name="badgeStatus"
+						        Grid.Column="1"
+						        Background="#1B3B22"
+						        BorderBrush="#81C784"
+						        BorderThickness="1"
+						        CornerRadius="6"
+						        Padding="8,2"
+						        VerticalAlignment="Center">
+							<TextBlock Name="txtStatusBadge"
+							           Text="New"
+							           Foreground="#81C784"
+							           FontSize="11"
+							           FontWeight="Bold" />
+						</Border>
+					</Grid>
+
+					<!-- Notification Title -->
+					<SelectableTextBlock Name="txtTitle2"
+					                     FontSize="17"
+					                     FontWeight="Bold"
+					                     Foreground="#E6E1E5"
+					                     TextWrapping="Wrap" />
+				</StackPanel>
+			</Border>
+
+			<!-- Status History Section -->
+			<Expander Header="Status &amp; Revision History" IsExpanded="True"
+			          Background="#1E1E2A"
+			          BorderBrush="#2D2D3F"
+			          CornerRadius="10">
+				<ListBox Name="lstHistory"
+				         Margin="0,8,0,0"
+				         MaxHeight="200"
+				         Background="#161622"
+				         CornerRadius="6"
+				         SelectionChanged="LstHistory_SelectionChanged">
 					<ListBox.ItemTemplate>
 						<DataTemplate x:DataType="x:String">
-							<TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="13" />
+							<TextBlock Text="{Binding}"
+							           TextWrapping="Wrap"
+							           FontSize="12"
+							           Foreground="#CAC4D0"
+							           Padding="4,2" />
 						</DataTemplate>
 					</ListBox.ItemTemplate>
 				</ListBox>
 			</Expander>
-			<!-- Header & Title -->
-			<StackPanel Spacing="4">
-				<SelectableTextBlock Name="txtTitle1"
-					 FontSize="16"
-					 FontWeight="SemiBold"
-					 TextWrapping="Wrap" />
-				<SelectableTextBlock Name="txtTitle2"
-				                     FontSize="16"
-				                     FontWeight="SemiBold"
-				                     TextWrapping="Wrap" />
-			</StackPanel>
 
-			<!-- Message Body -->
-			<Border Padding="12"
-			        CornerRadius="6"
+			<!-- Message Body Card -->
+			<Border Background="#1E1E2A"
+			        BorderBrush="#2D2D3F"
 			        BorderThickness="1"
-			        BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
-				<SelectableTextBlock Name="txtMessage"
-				                     FontSize="16"
-				                     TextWrapping="Wrap"
-				                     FontFamily="Segoe UI, Segoe UI Emoji" />
+			        CornerRadius="10"
+			        Padding="16">
+				<StackPanel Spacing="10">
+					<Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+						<TextBlock Text="Message Body"
+						           FontSize="14"
+						           FontWeight="SemiBold"
+						           Foreground="#D0BCFF"
+						           VerticalAlignment="Center" />
+
+						<Button Grid.Column="1"
+						        Content="📋 Copy Message"
+						        Classes="secondary"
+						        Click="CopyMessage_Click" />
+					</Grid>
+
+					<Border Background="#161622"
+					        BorderBrush="#2D2D3F"
+					        BorderThickness="1"
+					        CornerRadius="8"
+					        Padding="14">
+						<SelectableTextBlock Name="txtMessage"
+						                     FontSize="14"
+						                     Foreground="#E6E1E5"
+						                     TextWrapping="Wrap"
+						                     FontFamily="Segoe UI, Segoe UI Emoji" />
+					</Border>
+				</StackPanel>
 			</Border>
 
-			<!-- Images -->
+			<!-- Images Container -->
 			<ItemsControl Name="imgContainer">
 				<ItemsControl.ItemTemplate>
 					<DataTemplate x:DataType="imaging:Bitmap">
-						<Border Margin="0,0,0,10" CornerRadius="6" ClipToBounds="True">
-							<Image Source="{Binding}" Stretch="Uniform" MaxWidth="560" HorizontalAlignment="Left" />
+						<Border Background="#1E1E2A"
+						        BorderBrush="#2D2D3F"
+						        BorderThickness="1"
+						        CornerRadius="10"
+						        Padding="12"
+						        Margin="0,0,0,12">
+							<Image Source="{Binding}"
+							       Stretch="Uniform"
+							       MaxWidth="600"
+							       HorizontalAlignment="Left" />
 						</Border>
 					</DataTemplate>
 				</ItemsControl.ItemTemplate>
 			</ItemsControl>
 
-			<!-- Technical Metadata -->
-			<Expander Header="Notification Details" IsExpanded="True">
-				<Border Margin="0,8,0,0"
-				        Padding="12"
-				        CornerRadius="6"
-				        BorderThickness="1"
-				        BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
-					<SelectableTextBlock Name="txtMetadata"
-					                     FontSize="13"
-					                     TextWrapping="Wrap" />
-				</Border>
+			<!-- Technical Metadata Card -->
+			<Expander Header="Technical Details &amp; Metadata" IsExpanded="True"
+			          Background="#1E1E2A"
+			          BorderBrush="#2D2D3F"
+			          CornerRadius="10">
+				<StackPanel Margin="0,8,0,0" Spacing="8">
+					<Grid ColumnDefinitions="*,Auto">
+						<Button Grid.Column="1"
+						        Content="📋 Copy Details"
+						        Classes="secondary"
+						        Click="CopyMetadata_Click" />
+					</Grid>
+
+					<Border Background="#161622"
+					        BorderBrush="#2D2D3F"
+					        BorderThickness="1"
+					        CornerRadius="8"
+					        Padding="12">
+						<SelectableTextBlock Name="txtMetadata"
+						                     FontSize="12"
+						                     Foreground="#CAC4D0"
+						                     FontFamily="Consolas, Cascadia Code, Courier New, monospace"
+						                     TextWrapping="Wrap" />
+					</Border>
+				</StackPanel>
 			</Expander>
+
 		</StackPanel>
 	</ScrollViewer>
 </Window>

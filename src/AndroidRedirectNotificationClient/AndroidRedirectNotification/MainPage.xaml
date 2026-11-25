@@ -1,7 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:AndroidRedirectNotification.Models"
              x:Class="AndroidRedirectNotification.MainPage"
+             NavigationPage.HasNavigationBar="False"
              BackgroundColor="#121218">
 
     <Grid RowDefinitions="Auto, *">
@@ -16,6 +18,9 @@
                            FontSize="20" 
                            FontAttributes="Bold" 
                            TextColor="#E6E1E5" />
+                    <Label Text="Android Client Monitor"
+                           FontSize="12"
+                           TextColor="#808090" />
                 </VerticalStackLayout>
             </Grid>
         </Border>
@@ -160,7 +165,7 @@
 
                 <!-- Notification History Header -->
                 <Grid ColumnDefinitions="*, Auto" Margin="0,4,0,0">
-                    <Label Text="Notification History" 
+                    <Label Text="Active Notifications" 
                            FontSize="18" 
                            FontAttributes="Bold" 
                            TextColor="#E6E1E5" 
@@ -180,7 +185,9 @@
                 </Grid>
 
                 <!-- Notification History List -->
-                <CollectionView x:Name="historyCollectionView">
+                <CollectionView x:Name="historyCollectionView"
+                                SelectionMode="Single"
+                                SelectionChanged="OnNotificationSelected">
                     <CollectionView.EmptyView>
                         <Border BackgroundColor="#1E1E2A" 
                                 StrokeThickness="0" 
@@ -194,28 +201,92 @@
                         </Border>
                     </CollectionView.EmptyView>
                     <CollectionView.ItemTemplate>
-                        <DataTemplate>
+                        <DataTemplate x:DataType="models:NotificationItemModel">
                             <Border BackgroundColor="#1E1E2A"
                                     Stroke="#2D2D3F"
                                     StrokeThickness="1"
                                     StrokeShape="RoundRectangle 12"
                                     Margin="0,0,0,10"
                                     Padding="14">
-                                <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto" RowSpacing="6">
-                                    <Label Grid.Row="0" Grid.Column="0"
-                                           Text="{Binding Title}"
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnNotificationTapped" CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                                <VerticalStackLayout Spacing="8">
+                                    <!-- Top row: App Name / Package, Status Badge, Revision Badge, Timestamp -->
+                                    <Grid ColumnDefinitions="Auto, Auto, *, Auto" ColumnSpacing="8" VerticalOptions="Center">
+                                        <!-- App Name Tag -->
+                                        <Label Grid.Column="0"
+                                               Text="{Binding AppName}"
+                                               FontAttributes="Bold"
+                                               FontSize="12"
+                                               TextColor="#D0BCFF"
+                                               LineBreakMode="TailTruncation"
+                                               VerticalOptions="Center" />
+
+                                        <!-- Status Badge (New / Updated / Removed) -->
+                                        <Border Grid.Column="1"
+                                                BackgroundColor="{Binding StatusBackground}"
+                                                Stroke="{Binding StatusColor}"
+                                                StrokeThickness="1"
+                                                StrokeShape="RoundRectangle 6"
+                                                Padding="6,2"
+                                                VerticalOptions="Center">
+                                            <Label Text="{Binding Status}"
+                                                   TextColor="{Binding StatusColor}"
+                                                   FontSize="10"
+                                                   FontAttributes="Bold" />
+                                        </Border>
+
+                                        <!-- Revision Badge if multiple updates -->
+                                        <Border Grid.Column="2"
+                                                IsVisible="{Binding HasHistory}"
+                                                BackgroundColor="#2D2240"
+                                                Stroke="#9A72EC"
+                                                StrokeThickness="1"
+                                                StrokeShape="RoundRectangle 6"
+                                                Padding="6,2"
+                                                HorizontalOptions="Start"
+                                                VerticalOptions="Center">
+                                            <Label Text="{Binding RevisionBadgeText}"
+                                                   TextColor="#D0BCFF"
+                                                   FontSize="10"
+                                                   FontAttributes="Bold" />
+                                        </Border>
+
+                                        <!-- Timestamp -->
+                                        <Label Grid.Column="3"
+                                               Text="{Binding Timestamp}"
+                                               FontSize="11"
+                                               TextColor="#808090"
+                                               HorizontalOptions="End"
+                                               VerticalOptions="Center" />
+                                    </Grid>
+
+                                    <!-- Title -->
+                                    <Label Text="{Binding Title}"
                                            FontAttributes="Bold"
-                                           FontSize="14"
-                                           TextColor="#D0BCFF" />
-                                    <Label Grid.Row="0" Grid.Column="1"
-                                           Text="{Binding Timestamp}"
-                                           FontSize="11"
-                                           TextColor="#808090" />
-                                    <Label Grid.Row="1" Grid.ColumnSpan="2"
-                                           Text="{Binding Message}"
+                                           FontSize="15"
+                                           TextColor="#E6E1E5"
+                                           LineBreakMode="TailTruncation" />
+
+                                    <!-- Message Body (preview) -->
+                                    <Label Text="{Binding Message}"
                                            FontSize="13"
-                                           TextColor="#E6E1E5" />
-                                </Grid>
+                                           TextColor="#CAC4D0"
+                                           MaxLines="3"
+                                           LineBreakMode="TailTruncation" />
+
+                                    <!-- Footer: Tap to view details prompt & image indicator -->
+                                    <Grid ColumnDefinitions="*, Auto" Margin="0,2,0,0">
+                                        <HorizontalStackLayout Grid.Column="0" Spacing="6" IsVisible="{Binding HasImages}">
+                                            <Label Text="📷 Attached Image" FontSize="11" TextColor="#D0BCFF" />
+                                        </HorizontalStackLayout>
+                                        <Label Grid.Column="1"
+                                               Text="Tap for history &amp; details →"
+                                               FontSize="11"
+                                               TextColor="#9A72EC" />
+                                    </Grid>
+                                </VerticalStackLayout>
                             </Border>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>

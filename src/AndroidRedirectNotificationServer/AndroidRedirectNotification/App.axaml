@@ -1,10 +1,77 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="AndroidRedirectNotification.App">
+             x:Class="AndroidRedirectNotification.App"
+             RequestedThemeVariant="Dark">
 
 	<Application.Styles>
 		<FluentTheme />
 		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
+
+		<!-- Custom Global App Styles -->
+		<Style Selector="Window">
+			<Setter Property="Background" Value="#121218" />
+			<Setter Property="FontFamily" Value="Segoe UI, -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif" />
+		</Style>
+
+		<!-- Accent Button -->
+		<Style Selector="Button.accent">
+			<Setter Property="Background" Value="#9A72EC" />
+			<Setter Property="Foreground" Value="#FFFFFF" />
+			<Setter Property="FontWeight" Value="SemiBold" />
+			<Setter Property="CornerRadius" Value="6" />
+			<Setter Property="Padding" Value="14,6" />
+			<Setter Property="BorderThickness" Value="0" />
+		</Style>
+		<Style Selector="Button.accent:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#B08DFF" />
+			<Setter Property="Foreground" Value="#FFFFFF" />
+		</Style>
+
+		<!-- Secondary Button -->
+		<Style Selector="Button.secondary">
+			<Setter Property="Background" Value="#252538" />
+			<Setter Property="Foreground" Value="#E6E1E5" />
+			<Setter Property="BorderBrush" Value="#3D3D55" />
+			<Setter Property="BorderThickness" Value="1" />
+			<Setter Property="CornerRadius" Value="6" />
+			<Setter Property="Padding" Value="12,6" />
+		</Style>
+		<Style Selector="Button.secondary:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#33334C" />
+			<Setter Property="Foreground" Value="#FFFFFF" />
+		</Style>
+
+		<!-- Danger Button -->
+		<Style Selector="Button.danger">
+			<Setter Property="Background" Value="#2D1F21" />
+			<Setter Property="Foreground" Value="#FFB4AB" />
+			<Setter Property="BorderBrush" Value="#4E2B2E" />
+			<Setter Property="BorderThickness" Value="1" />
+			<Setter Property="CornerRadius" Value="6" />
+			<Setter Property="Padding" Value="12,6" />
+		</Style>
+		<Style Selector="Button.danger:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#442629" />
+			<Setter Property="Foreground" Value="#FFDAD6" />
+		</Style>
+
+		<!-- Modern DataGrid Header -->
+		<Style Selector="DataGridColumnHeader">
+			<Setter Property="Background" Value="#1A1A26" />
+			<Setter Property="Foreground" Value="#D0BCFF" />
+			<Setter Property="FontWeight" Value="SemiBold" />
+			<Setter Property="FontSize" Value="12" />
+			<Setter Property="Padding" Value="10,6" />
+			<Setter Property="SeparatorBrush" Value="#2D2D3F" />
+		</Style>
+
+		<!-- Modern DataGrid Row -->
+		<Style Selector="DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle">
+			<Setter Property="Fill" Value="#252438" />
+		</Style>
+		<Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
+			<Setter Property="Fill" Value="#322B4D" />
+		</Style>
 	</Application.Styles>
 
 </Application>

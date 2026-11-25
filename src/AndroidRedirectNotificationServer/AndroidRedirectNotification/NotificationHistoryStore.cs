@@ -11,7 +11,7 @@ namespace AndroidRedirectNotification
         private static readonly object _lock = new();
         private static readonly Dictionary<string, List<MyNotificationData>> _historyBySlot = new(StringComparer.Ordinal);
 
-        public static void Record(MyNotificationData data)
+        public static int Record(MyNotificationData data)
         {
             string key = data.GetSlotKey();
             lock (_lock)
@@ -22,6 +22,7 @@ namespace AndroidRedirectNotification
                     _historyBySlot[key] = list;
                 }
                 list.Add(data);
+                return list.Count;
             }
         }
 

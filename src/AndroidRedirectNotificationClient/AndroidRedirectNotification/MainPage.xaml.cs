@@ -2,6 +2,7 @@
 using System.IO;
 using System.Net;
 using System.Text.Json;
+using AndroidRedirectNotification.Models;
 
 namespace AndroidRedirectNotification
 {
@@ -19,9 +20,9 @@ namespace AndroidRedirectNotification
         public static DuplicateNotificationTracker DuplicateTracker { get; } = new();
 
         public Entry IpEditEntry => ipEditEntry;
-        public Entry PortEditEntry => portEntry;
+        public Entry PortEntry => portEntry;
 
-        public ObservableCollection<NotificationLog> Notifications { get; set; } = new();
+        public ObservableCollection<NotificationItemModel> Notifications { get; } = new();
 
         private string HistoryFilePath => Path.Combine(FileSystem.AppDataDirectory, "NotificationHistory.json");
 
@@ -75,18 +76,18 @@ namespace AndroidRedirectNotification
                 try
                 {
                     string json = File.ReadAllText(HistoryFilePath);
-                    var loadedLogs = JsonSerializer.Deserialize<List<NotificationLog>>(json);
+                    var loadedItems = JsonSerializer.Deserialize<List<NotificationItemModel>>(json);
 
-                    if (loadedLogs != null)
+                    if (loadedItems != null)
                     {
                         var cutoffDate = GetCutoffDate(KeepHistoryValue, KeepHistoryUnit);
                         bool needsResave = false;
 
-                        foreach (var log in loadedLogs)
+                        foreach (var item in loadedItems)
                         {
-                            if (cutoffDate == null || log.UtcTimestamp >= cutoffDate.Value)
+                            if (cutoffDate == null || item.UtcTimestamp >= cutoffDate.Value)
                             {
-                                Notifications.Add(log);
+                                Notifications.Add(item);
                             }
                             else
                             {
@@ -117,25 +118,29 @@ namespace AndroidRedirectNotification
             catch { }
         }
 
-        public void AddNotification(string message, string title, DateTimeOffset utcDateTime)
+        public void AddNotification(MyNotificationData data)
         {
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                Notifications.Insert(0, new NotificationLog
+                string targetKey = data.GetSlotKey();
+                var existing = Notifications.FirstOrDefault(x => string.Equals(x.SlotKey, targetKey, StringComparison.Ordinal));
+
+                List<MyNotificationData>? existingHistory = existing?.History;
+                if (existing != null)
                 {
-                    Title = title,
-                    Message = message,
-                    Timestamp = utcDateTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss"),
-                    UtcTimestamp = utcDateTime
-                });
+                    Notifications.Remove(existing);
+                }
+
+                var rowItem = NotificationItemModel.FromData(data, existingHistory);
+                Notifications.Insert(0, rowItem);
 
                 CleanOldNotificationsAndSave();
             });
         }
 
-        public static void LogNotification(string message, string title, DateTimeOffset utcDateTime)
+        public static void LogNotification(MyNotificationData data)
         {
-            Instance?.AddNotification(message, title, utcDateTime);
+            Instance?.AddNotification(data);
         }
 
         private void CleanOldNotificationsAndSave()
@@ -251,13 +256,30 @@ namespace AndroidRedirectNotification
                 }
             }
         }
-    }
 
-    public class NotificationLog
-    {
-        public string Title { get; set; } = "";
-        public string Message { get; set; } = "";
-        public string Timestamp { get; set; } = "";
-        public DateTimeOffset UtcTimestamp { get; set; }
+        private async void OnNotificationTapped(object? sender, TappedEventArgs e)
+        {
+            if (e.Parameter is NotificationItemModel item)
+            {
+                await Navigation.PushAsync(new NotificationDetailPage(item));
+            }
+            else if (sender is BindableObject bindable && bindable.BindingContext is NotificationItemModel contextItem)
+            {
+                await Navigation.PushAsync(new NotificationDetailPage(contextItem));
+            }
+        }
+
+        private async void OnNotificationSelected(object? sender, SelectionChangedEventArgs e)
+        {
+            if (e.CurrentSelection.FirstOrDefault() is NotificationItemModel selectedItem)
+            {
+                if (sender is CollectionView cv)
+                {
+                    cv.SelectedItem = null;
+                }
+
+                await Navigation.PushAsync(new NotificationDetailPage(selectedItem));
+            }
+        }
     }
 }

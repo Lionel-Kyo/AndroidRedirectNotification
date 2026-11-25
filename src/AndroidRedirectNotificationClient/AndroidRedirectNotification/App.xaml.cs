@@ -9,8 +9,9 @@
 
         protected override Window CreateWindow(IActivationState? activationState)
         {
-            return new Window(new MainPage());
+            var navPage = new NavigationPage(new MainPage());
+            NavigationPage.SetHasNavigationBar(navPage, false);
+            return new Window(navPage);
         }
     }
-
 }

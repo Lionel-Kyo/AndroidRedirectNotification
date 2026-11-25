@@ -13,11 +13,24 @@ namespace AndroidRedirectNotification
         protected override void OnCreate(Bundle? savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
-            //Log.Info("NotificationService", "base.OnCreate(savedInstanceState)");
-            //if (!IsNotificationListenerEnabled())
-            //{
-            //    OpenNotificationAccessSettings();
-            //}
+
+            try
+            {
+                if (Build.VERSION.SdkInt >= BuildVersionCodes.Lollipop && Window != null)
+                {
+                    Window.SetStatusBarColor(Android.Graphics.Color.ParseColor("#1E1E2A"));
+                    Window.SetNavigationBarColor(Android.Graphics.Color.ParseColor("#121218"));
+
+                    var controller = AndroidX.Core.View.WindowCompat.GetInsetsController(Window, Window.DecorView);
+                    if (controller != null)
+                    {
+                        controller.AppearanceLightStatusBars = false;
+                        controller.AppearanceLightNavigationBars = false;
+                    }
+                }
+            }
+            catch { }
+
             try
             {
                 Android.Content.Intent startService = new Android.Content.Intent(Android.App.Application.Context, typeof(NotificationReceiverService));

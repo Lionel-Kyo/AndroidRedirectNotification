@@ -3,22 +3,54 @@
         xmlns:local="using:AndroidRedirectNotification"
         x:Class="AndroidRedirectNotification.ExceptionRecordViewerWindow"
         Title="Exception Record Viewer"
-        Width="800" Height="450"
+        Icon="/Assets/appicon.ico"
+        Width="860" Height="500"
+        MinWidth="600" MinHeight="360"
         WindowStartupLocation="CenterOwner"
+        Background="#121218"
         KeyDown="ExceptionRecordViewer_KeyDown">
-    <Grid>
-		<DataGrid x:Name="dgv"
-                  x:DataType="local:ExceptionRecordRowItem"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-				  CanUserResizeColumns="True"
-                  GridLinesVisibility="All"
-				  ScrollViewer.HorizontalScrollBarVisibility="Auto">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Date Time" Binding="{Binding DateTime}" Width="180" />
-                <DataGridTextColumn Header="Exception Type" Binding="{Binding Name}" Width="200" />
-                <DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="*" />
-            </DataGrid.Columns>
-        </DataGrid>
-    </Grid>
+
+	<Grid RowDefinitions="Auto,*" Margin="16" RowSpacing="12">
+		<!-- Header -->
+		<Grid Grid.Row="0" ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+			<StackPanel Spacing="2">
+				<TextBlock Text="Exception History"
+				           FontSize="16"
+				           FontWeight="Bold"
+				           Foreground="#E6E1E5" />
+				<TextBlock Text="Recorded runtime errors and exceptions"
+				           FontSize="12"
+				           Foreground="#808095" />
+			</StackPanel>
+
+			<Button Grid.Column="1"
+			        Content="Close"
+			        Classes="secondary"
+			        Click="CloseButton_Click" />
+		</Grid>
+
+		<!-- DataGrid Container -->
+		<Border Grid.Row="1"
+		        Background="#1E1E2A"
+		        BorderBrush="#2D2D3F"
+		        BorderThickness="1"
+		        CornerRadius="8"
+		        ClipToBounds="True">
+			<DataGrid x:Name="dgv"
+			          x:DataType="local:ExceptionRecordRowItem"
+			          AutoGenerateColumns="False"
+			          IsReadOnly="True"
+			          CanUserResizeColumns="True"
+			          GridLinesVisibility="Horizontal"
+			          HorizontalGridLinesBrush="#262638"
+			          RowHeight="34"
+			          ScrollViewer.HorizontalScrollBarVisibility="Auto">
+				<DataGrid.Columns>
+					<DataGridTextColumn Header="Date Time" Binding="{Binding DateTime}" Width="180" />
+					<DataGridTextColumn Header="Exception Type" Binding="{Binding Name}" Width="220" />
+					<DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="*" />
+				</DataGrid.Columns>
+			</DataGrid>
+		</Border>
+	</Grid>
 </Window>
